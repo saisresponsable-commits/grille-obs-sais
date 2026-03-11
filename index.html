@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Outil d'Observation de l'integration scolaire</title>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-feature-settings: "cv02","cv03","cv04","cv11";
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+            background: #f8fafc; color: #1e293b; scroll-behavior: smooth;
+            font-size: 1rem; line-height: 1.5;
+        }
+
+        /* Layout */
+        .max-w-4xl  { max-width: 56rem; margin: 0 auto; }
+        .max-w-7xl  { max-width: 80rem; margin: 0 auto; }
+        .py-12 { padding-top: 3rem; padding-bottom: 3rem; }
+        .py-8  { padding-top: 2rem; padding-bottom: 2rem; }
+        .px-4  { padding-left: 1rem; padding-right: 1rem; }
+        .mb-10 { margin-bottom: 2.5rem; }
+        .mb-8  { margin-bottom: 2rem; }
+        .mb-6  { margin-bottom: 1.5rem; }
+        .mb-4  { margin-bottom: 1rem; }
+        .mb-3  { margin-bottom: 0.75rem; }
+        .mb-2  { margin-bottom: 0.5rem; }
+        .mt-2  { margin-top: 0.5rem; }
+        .mt-3  { margin-top: 0.75rem; }
+        .mt-4  { margin-top: 1rem; }
+        .gap-2 { gap: 0.5rem; }
+        .gap-3 { gap: 0.75rem; }
+        .gap-4 { gap: 1rem; }
+        .gap-6 { gap: 1.5rem; }
+        .gap-8 { gap: 2rem; }
+
+        /* Flex/Grid */
+        .flex        { display: flex; }
+        .flex-col    { flex-direction: column; }
+        .flex-1      { flex: 1; }
+        .flex-wrap   { flex-wrap: wrap; }
+        .items-center { align-items: center; }
+        .items-start  { align-items: flex-start; }
+        .justify-center { justify-content: center; }
+        .justify-between { justify-content: space-between; }
+        .text-center { text-align: center; }
+        .inline-flex { display: inline-flex; }
+        .shrink-0    { flex-shrink: 0; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; }
+        .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1rem; }
+        .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; }
+        .grid-radar { display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; align-items: center; }
+
+        /* Typography */
+        .text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
+        .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+        .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+        .text-xl  { font-size: 1.25rem; line-height: 1.75rem; }
+        .text-lg  { font-size: 1.125rem; line-height: 1.75rem; }
+        .text-sm  { font-size: 0.875rem; line-height: 1.25rem; }
+        .text-xs  { font-size: 0.75rem; line-height: 1rem; }
+        .text-xxs { font-size: 0.65rem; line-height: 0.9rem; }
+        .font-black  { font-weight: 900; }
+        .font-bold   { font-weight: 700; }
+        .font-semibold { font-weight: 600; }
+        .font-medium { font-weight: 500; }
+        .tracking-tight  { letter-spacing: -0.025em; }
+        .tracking-widest { letter-spacing: 0.1em; }
+        .uppercase { text-transform: uppercase; }
+        .italic    { font-style: italic; }
+        .whitespace-pre-wrap { white-space: pre-wrap; }
+        .leading-relaxed { line-height: 1.625; }
+        .leading-tight   { line-height: 1.25; }
+        .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        /* Colors */
+        .text-white     { color: #fff; }
+        .text-slate-900 { color: #0f172a; }
+        .text-slate-800 { color: #1e293b; }
+        .text-slate-700 { color: #334155; }
+        .text-slate-600 { color: #475569; }
+        .text-slate-500 { color: #64748b; }
+        .text-slate-400 { color: #94a3b8; }
+        .text-blue-700  { color: #1d4ed8; }
+        .text-blue-600  { color: #2563eb; }
+        .text-green-600 { color: #16a34a; }
+        .text-green-700 { color: #15803d; }
+        .text-red-600   { color: #dc2626; }
+        .text-red-700   { color: #b91c1c; }
+        .text-amber-700 { color: #b45309; }
+        .text-purple-700 { color: #7e22ce; }
+        .text-orange-700 { color: #c2410c; }
+
+        /* Backgrounds */
+        .bg-white      { background: #fff; }
+        .bg-slate-50   { background: #f8fafc; }
+        .bg-slate-100  { background: #f1f5f9; }
+        .bg-slate-900  { background: #0f172a; }
+        .bg-blue-50    { background: #eff6ff; }
+        .bg-blue-100   { background: #dbeafe; }
+        .bg-blue-600   { background: #2563eb; }
+        .bg-blue-700   { background: #1d4ed8; }
+        .bg-blue-800   { background: #1e40af; }
+        .bg-blue-900   { background: #1e3a8a; }
+        .bg-green-50   { background: #f0fdf4; }
+        .bg-green-100  { background: #dcfce7; }
+        .bg-green-600  { background: #16a34a; }
+        .bg-red-50     { background: #fef2f2; }
+        .bg-red-100    { background: #fee2e2; }
+        .bg-amber-100  { background: #fef3c7; }
+        .bg-purple-50  { background: #faf5ff; }
+
+        /* Borders */
+        .border       { border: 1px solid #e2e8f0; }
+        .border-t     { border-top: 1px solid #e2e8f0; }
+        .border-b     { border-bottom: 1px solid #e2e8f0; }
+        .border-l-4   { border-left: 4px solid; }
+        .border-l-8   { border-left: 8px solid; }
+        .border-slate-100 { border-color: #f1f5f9; }
+        .border-slate-200 { border-color: #e2e8f0; }
+        .border-blue-200  { border-color: #bfdbfe; }
+        .border-blue-600  { border-color: #2563eb; }
+        .border-purple-200 { border-color: #e9d5ff; }
+        .border-indigo-400 { border-color: #818cf8; }
+        .border-red-200   { border-color: #fecaca; }
+
+        /* Radius */
+        .rounded    { border-radius: 0.25rem; }
+        .rounded-lg { border-radius: 0.5rem; }
+        .rounded-xl { border-radius: 0.75rem; }
+        .rounded-2xl { border-radius: 1rem; }
+        .rounded-3xl { border-radius: 1.5rem; }
+        .rounded-full { border-radius: 9999px; }
+
+        /* Shadows */
+        .shadow-sm  { box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .shadow     { box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06); }
+        .shadow-lg  { box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); }
+        .shadow-xl  { box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); }
+        .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+        .shadow-inner { box-shadow: inset 0 2px 4px rgba(0,0,0,0.06); }
+
+        /* Sizing */
+        .w-full  { width: 100%; }
+        .w-4  { width: 1rem; height: 1rem; }
+        .w-5  { width: 1.25rem; height: 1.25rem; }
+        .w-8  { width: 2rem; height: 2rem; }
+        .w-10 { width: 2.5rem; height: 2.5rem; }
+        .w-12 { width: 3rem; height: 3rem; }
+        .w-32 { width: 8rem; }
+        .w-80 { width: 20rem; }
+        .w-2  { width: 0.5rem; }
+        .h-2  { height: 0.5rem; }
+        .h-1-5 { height: 0.375rem; }
+        .min-h-60 { min-height: 60px; }
+        .min-h-100 { min-height: 100px; }
+        .h-14 { height: 3.5rem; }
+        .h-80 { height: 20rem; }
+        .h-300 { height: 300px; }
+        .overflow-hidden { overflow: hidden; }
+        .overflow-x-auto { overflow-x: auto; }
+        .overflow-y-auto { overflow-y: auto; }
+        .max-h-60vh { max-height: 60vh; }
+        .max-h-80 { max-height: 20rem; }
+
+        /* Misc */
+        .cursor-not-allowed { cursor: not-allowed; }
+        .opacity-50 { opacity: 0.5; }
+        .opacity-30 { opacity: 0.3; }
+        .opacity-20 { opacity: 0.2; }
+        .resize-none { resize: none; }
+        .object-contain { object-fit: contain; }
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border-width: 0; }
+
+        /* Card */
+        .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04); overflow: hidden; transition: box-shadow 0.15s; }
+        .card:hover { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -1px rgba(0,0,0,0.04); }
+        .card-header { padding: 1rem 1.5rem; border-bottom: 1px solid #f1f5f9; background: rgba(248,250,252,0.5); display: flex; align-items: center; gap: 0.75rem; }
+        .card-body { padding: 1.5rem; }
+
+        /* Buttons */
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.625rem 1.25rem; border-radius: 0.5rem; font-weight: 500; font-size: 0.875rem; cursor: pointer; transition: all 0.2s ease; border: none; outline: none; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-primary { background: #1d4ed8; color: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .btn-primary:hover:not(:disabled) { background: #1e40af; box-shadow: 0 4px 6px -1px rgba(29,78,216,0.3); transform: translateY(-1px); }
+        .btn-outline { background: #fff; color: #334155; border: 1px solid #cbd5e1; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .btn-outline:hover:not(:disabled) { background: #f8fafc; border-color: #94a3b8; transform: translateY(-1px); }
+        .btn-danger  { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+        .btn-danger:hover:not(:disabled)  { background: #fee2e2; border-color: #fca5a5; }
+        .btn-ghost   { background: transparent; color: #64748b; }
+        .btn-ghost:hover:not(:disabled)   { background: #f1f5f9; color: #334155; }
+        .btn-ai      { background: linear-gradient(135deg, #7c3aed, #4f46e5); color: #fff; box-shadow: 0 1px 3px rgba(79,70,229,0.3); }
+        .btn-ai:hover:not(:disabled) { box-shadow: 0 8px 15px -3px rgba(79,70,229,0.4); transform: translateY(-1px); }
+        .btn-success { background: #16a34a; color: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .btn-success:hover:not(:disabled) { background: #15803d; box-shadow: 0 4px 6px -1px rgba(22,163,74,0.3); transform: translateY(-1px); }
+        .btn-lg { padding: 1.25rem 1.5rem; font-size: 1.25rem; }
+
+        /* Inputs */
+        input[type=text], input[type=password], select, textarea {
+            width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.75rem;
+            font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            font-size: 0.875rem; background: #f8fafc; outline: none;
+            transition: all 0.15s;
+        }
+        input[type=text]:focus, input[type=password]:focus, select:focus, textarea:focus {
+            background: #fff; border-color: #93c5fd; box-shadow: 0 0 0 4px rgba(147,197,253,0.25), 0 1px 2px rgba(0,0,0,0.05);
+        }
+        select { appearance: auto; font-weight: 600; }
+        textarea { resize: none; }
+
+        /* Form labels */
+        .label { display: block; font-size: 0.625rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.25rem; }
+
+        /* Table */
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        th, td { padding: 1rem 1.5rem; text-align: left; }
+        th { font-size: 0.625rem; font-weight: 900; text-transform: uppercase; color: #64748b; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
+        tr + tr { border-top: 1px solid #f1f5f9; }
+        tr:hover { background: rgba(248,250,252,0.5); }
+
+        /* Progress bar */
+        .progress-track { background: #f1f5f9; border-radius: 9999px; overflow: hidden; }
+        .progress-fill  { height: 100%; background: #2563eb; border-radius: 9999px; transition: width 0.3s; }
+
+        /* Score badge */
+        .score-badge { width: 2rem; height: 2rem; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 900; margin: 0 auto; }
+        .score-0 { background: #f1f5f9; color: #64748b; }
+        .score-1 { background: #fee2e2; color: #b91c1c; }
+        .score-2 { background: #fed7aa; color: #9a3412; }
+        .score-3 { background: #fef9c3; color: #854d0e; }
+        .score-4 { background: #dcfce7; color: #15803d; }
+        .score-empty { background: #f1f5f9; color: #94a3b8; }
+
+        /* Score buttons */
+        .score-btn { padding: 0.625rem 0.5rem; border-radius: 0.75rem; border: 2px solid #e2e8f0; background: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 0.25rem; transition: all 0.15s ease; min-width: 0; }
+        .score-btn:hover:not(.active) { border-color: #bfdbfe; background: #eff6ff; transform: translateY(-1px); }
+        .score-btn.active { color: #fff; transform: scale(1.05); }
+        .score-btn.active-0 { background: #64748b; border-color: #64748b; box-shadow: 0 4px 10px -2px rgba(100,116,139,0.4); }
+        .score-btn.active-1 { background: #dc2626; border-color: #dc2626; box-shadow: 0 4px 10px -2px rgba(220,38,38,0.35); }
+        .score-btn.active-2 { background: #c2410c; color: #fff; box-shadow: 0 4px 10px -2px rgba(194,65,12,0.5); }
+        .score-btn.active-3 { background: #facc15; color: #422006; box-shadow: 0 4px 10px -2px rgba(250,204,21,0.6); }
+        .score-btn.active-4 { background: #15803d; border-color: #15803d; box-shadow: 0 4px 10px -2px rgba(21,128,61,0.4); }
+
+        /* Nav sidebar */
+        .domain-btn { width: 100%; text-align: left; padding: 0.75rem; border-radius: 0.75rem; font-size: 0.6875rem; font-weight: 700; display: flex; align-items: center; justify-content: space-between; border: 1px solid #e2e8f0; background: #fff; color: #475569; cursor: pointer; transition: all 0.15s; }
+        .domain-btn:hover { background: #f8fafc; }
+        .domain-btn.active { background: #1e3a8a; color: #fff; border-color: #1e3a8a; box-shadow: 0 4px 6px -1px rgba(30,58,138,0.3); }
+
+        /* Modals */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 50; }
+
+        /* AI glow */
+        .ai-glow { box-shadow: 0 0 15px rgba(147,51,234,0.2); }
+
+        /* Alert */
+        .alert { padding: 1rem; border-radius: 0.75rem; display: flex; align-items: center; gap: 0.5rem; border: 1px solid; }
+        .alert-red { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+        .alert-orange { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
+
+        /* Scrollbar */
+        .scrollbar-thin::-webkit-scrollbar { width: 4px; }
+        .scrollbar-thin::-webkit-scrollbar-track { background: #f1f5f9; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+
+        /* Spinner */
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spin { animation: spin 0.8s linear infinite; display: inline-block; }
+
+        /* Sidebar layout */
+        .obs-layout { display: flex; gap: 2rem; }
+        .obs-sidebar { width: 20rem; flex-shrink: 0; }
+        .obs-main { flex: 1; min-width: 0; }
+
+        /* Domain header */
+        .domain-header { padding: 2rem; background: #1e3a8a; color: #fff; border-radius: 1.5rem; display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+
+        /* Fieldset reset */
+        fieldset { border: none; padding: 0; margin: 0; }
+
+        /* Footer nav */
+        .footer-nav { display: flex; justify-content: space-between; padding: 2rem 0; }
+
+        @media (max-width: 768px) {
+            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+            .obs-layout { flex-direction: column; }
+            .obs-sidebar { width: 100%; }
+            .grid-radar { grid-template-columns: 1fr; }
+        }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; font-size: 10pt; }
+            .card { box-shadow: none !important; break-inside: avoid; margin-bottom: 0.5cm !important; }
+            .domain-header { background: white !important; color: black !important; border: 1px solid #000 !important; }
+            .bg-slate-900 { background: white !important; color: black !important; }
+            .page-break { page-break-before: always; margin-top: 2cm; }
+            .chart-print-wrap canvas { width: 420px !important; height: 320px !important; }
+            .aide-chart-print-wrap canvas { width: 100% !important; height: 240px !important; }
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+<div id="app"></div>
+
+<!-- Plain script for logo (must be outside React/JSX) -->
+<script id="logo-data">
+window.LOGO_B64 = "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";
+</script>
+
+<!-- SVG icons as JS constants -->
+<script>
+var SVG_ICONS = {
+    ChevronRight: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>',
+    Upload:       '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>',
+    Save:         '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>',
+    Printer:      '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>',
+    Trash2:       '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>',
+    AlertTriangle:'<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+    CheckCircle2: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>',
+    Sparkles:     '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/></svg>',
+    Wand2:        '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="m15 4-1 1"/><path d="m9.5 9.5 1-1"/><path d="m14 4 2.5 2.5L5 18l-3 1 1-3Z"/><path d="m18 2 2 2"/><path d="m20 6-2-2"/></svg>',
+    Loader2:      '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>',
+    ListChecks:   '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><line x1="13" y1="8" x2="21" y2="8"/><line x1="13" y1="18" x2="21" y2="18"/></svg>',
+    Lightbulb:    '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg>',
+    ShieldAlert:  '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+    BarChart3:    '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+    Stethoscope:  '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/></svg>',
+    Brain:        '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.46 2.5 2.5 0 0 1-1.7-4.28 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.18-1.94z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.46 2.5 2.5 0 0 0 1.7-4.28 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.18-1.94z"/></svg>'
+};
+function icon(name, size) {
+    size = size || 20;
+    var s = SVG_ICONS[name] || '';
+    return s.replace('<svg ', '<svg width="' + size + '" height="' + size + '" ');
+}
+</script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<!-- App script (vanilla JS, NO Babel, NO JSX) -->
+<script>
+'use strict';
+
+// ─── DATA ─────────────────────────────────────────────────────────────────────
+var DOMAINS = [
+  { id:'D1', title:"Acc\u00e8s physique et environnement", items:[
+    { id:'d1_1', label:"Acc\u00e8s autonome aux b\u00e2timents",     help:"Rampe, ascenseur, portes." },
+    { id:'d1_2', label:"Circulation dans l'\u00e9cole",             help:"Couloirs, escaliers, cour." },
+    { id:'d1_3', label:"Acc\u00e8s aux sanitaires adapt\u00e9s",    help:"Proximit\u00e9, ergonomie." },
+    { id:'d1_4', label:"Acc\u00e8s aux classes sp\u00e9cialis\u00e9es", help:"Sciences, sport, informatique." },
+    { id:'d1_5', label:"Installation ergonomique en classe",        help:"Bureau, posture." },
+    { id:'d1_6', label:"Acc\u00e8s au mat\u00e9riel scolaire",     help:"Rangements, casiers." },
+    { id:'d1_7', label:"Participation activit\u00e9s physiques",   help:"Gym, r\u00e9cr\u00e9ation." },
+    { id:'d1_8', label:"Fatigabilit\u00e9 li\u00e9e aux d\u00e9placements", help:"Impact logistique." }
+  ]},
+  { id:'D2', title:"Autonomie dans la vie scolaire", items:[
+    { id:'d2_1', label:"Gestion du mat\u00e9riel scolaire",        help:"Affaires personnelles." },
+    { id:'d2_2', label:"Organisation du cartable",                 help:"Tri, rangement." },
+    { id:'d2_3', label:"Installation en d\u00e9but de cours",     help:"Rapidit\u00e9 de mise au travail." },
+    { id:'d2_4', label:"Prise de notes",                          help:"Endurance, lisibilit\u00e9." },
+    { id:'d2_5', label:"Utilisation outils compensatoires",       help:"PC, dict\u00e9e vocale." },
+    { id:'d2_6', label:"Gestion du temps",                        help:"D\u00e9but/fin de t\u00e2che." },
+    { id:'d2_7', label:"Capacit\u00e9 \u00e0 demander de l'aide", help:"Savoir solliciter." },
+    { id:'d2_8', label:"Autonomie d\u00e9placements internes",    help:"Changement de place." },
+    { id:'d2_9', label:"Gestion pauses et transitions",           help:"Inter-cours." }
+  ]},
+  { id:'D3', title:"Capacit\u00e9s ex\u00e9cutives (TDAH)", items:[
+    { id:'d3_1', label:"Maintien de l'attention",                 help:"Focus prolong\u00e9." },
+    { id:'d3_2', label:"Capacit\u00e9 \u00e0 suivre les consignes", help:"Écoute et r\u00e9alisation." },
+    { id:'d3_3', label:"Gestion de l'impulsivit\u00e9",          help:"Contr\u00f4le de soi." },
+    { id:'d3_4', label:"Pers\u00e9v\u00e9rance dans la t\u00e2che", help:"Effort continu." },
+    { id:'d3_5', label:"Capacit\u00e9 \u00e0 planifier",         help:"Anticipation." },
+    { id:'d3_6', label:"Organisation des \u00e9tapes",           help:"S\u00e9quen\u00e7age." },
+    { id:'d3_7', label:"Flexibilit\u00e9 cognitive",             help:"Adaptation changement." },
+    { id:'d3_8', label:"Gestion des distractions",               help:"Filtrage sensoriel." }
+  ]},
+  { id:'D4', title:"Capacit\u00e9s p\u00e9dagogiques", items:[
+    { id:'d4_1', label:"Compr\u00e9hension des consignes",        help:"Sens et attendu." },
+    { id:'d4_2', label:"Compr\u00e9hension orale",               help:"Message verbal." },
+    { id:'d4_3', label:"Lecture",                                 help:"Fluidit\u00e9, sens." },
+    { id:'d4_4', label:"Production \u00e9crite",                 help:"Structure, graphisme." },
+    { id:'d4_5', label:"Raisonnement logique",                   help:"Analyse." },
+    { id:'d4_6', label:"Comp\u00e9tences math\u00e9matiques",    help:"Calcul, probl\u00e8mes." },
+    { id:'d4_7', label:"Capacit\u00e9 \u00e0 m\u00e9moriser",   help:"Rappel d'infos." },
+    { id:'d4_8', label:"Transfert des apprentissages",           help:"G\u00e9n\u00e9ralisation." },
+    { id:'d4_9', label:"Vitesse d'ex\u00e9cution",               help:"Rythme." }
+  ]},
+  { id:'D5', title:"Participation en classe", items:[
+    { id:'d5_1', label:"Participation orale",                    help:"R\u00e9pondre, questionner." },
+    { id:'d5_2', label:"Prise d'initiative",                     help:"Autonomie." },
+    { id:'d5_3', label:"Interaction enseignant",                 help:"Qualit\u00e9 du lien." },
+    { id:'d5_4', label:"Engagement activit\u00e9s",             help:"Implication." },
+    { id:'d5_5', label:"Participation travaux groupe",           help:"Collaboration." },
+    { id:'d5_6', label:"Capacit\u00e9 terminer t\u00e2ches",    help:"Ach\u00e8vement." }
+  ]},
+  { id:'D6', title:"Relations sociales", items:[
+    { id:'d6_1', label:"Relations avec les pairs",               help:"\u00c9changes." },
+    { id:'d6_2', label:"Acceptation par le groupe",              help:"Sentiment d'inclusion." },
+    { id:'d6_3', label:"Initiation interactions sociales",       help:"Aller vers." },
+    { id:'d6_4', label:"R\u00e9actions aux conflits",           help:"Gestion." },
+    { id:'d6_5', label:"Participation moments informels",        help:"R\u00e9cr\u00e9ation." },
+    { id:'d6_6', label:"Risque d'isolement",                    help:"Retrait." },
+    { id:'d6_7', label:"R\u00e9actions au regard des autres",  help:"Diff\u00e9rence." }
+  ]},
+  { id:'D7', title:"Gestion \u00e9motionnelle", items:[
+    { id:'d7_1', label:"Tol\u00e8re la frustration",            help:"Face \u00e0 l'\u00e9chec." },
+    { id:'d7_2', label:"Gestion du stress",                     help:"Anxi\u00e9t\u00e9 performance." },
+    { id:'d7_3', label:"Confiance en soi",                      help:"Sentiment comp\u00e9tence." },
+    { id:'d7_4', label:"Motivation scolaire",                   help:"Envie d'apprendre." },
+    { id:'d7_5', label:"Pers\u00e9v\u00e9rance difficult\u00e9s", help:"R\u00e9silience." },
+    { id:'d7_6', label:"Expression \u00e9motions",             help:"R\u00e9gulation." }
+  ]},
+  { id:'D8', title:"Fatigue et impact handicap", items:[
+    { id:'d8_1', label:"Fatigue physique",                      help:"Moteur." },
+    { id:'d8_2', label:"Fatigue cognitive",                     help:"Charge mentale." },
+    { id:'d8_3', label:"Gestion rythme scolaire",              help:"Tenue." },
+    { id:'d8_4', label:"Besoin de pauses",                     help:"Repos." },
+    { id:'d8_5', label:"Impact soins/th\u00e9rapies",         help:"Cons\u00e9quences." }
+  ]},
+  { id:'D9', title:"Collaboration et r\u00e9seau", items:[
+    { id:'d9_1', label:"Communication \u00e9cole-parents",     help:"Lien." },
+    { id:'d9_2', label:"Communication th\u00e9rapeutes",       help:"M\u00e9dical." },
+    { id:'d9_3', label:"Coordination P\u00f4le territorial",   help:"Appui." },
+    { id:'d9_4', label:"Mise en place am\u00e9nagements",      help:"Effectivit\u00e9." },
+    { id:'d9_5', label:"Compr\u00e9hension handicap \u00e9quipe", help:"Soutien." }
+  ]},
+  { id:'D10', title:"Utilisation am\u00e9nagements", items:[
+    { id:'d10_1', label:"Utilisation outils num\u00e9riques", help:"PC/Tablette." },
+    { id:'d10_2', label:"Am\u00e9nagements p\u00e9dagogiques",help:"Temps+, supports." },
+    { id:'d10_3', label:"Adaptations \u00e9valuation",        help:"Tests." },
+    { id:'d10_4', label:"Adaptation du mat\u00e9riel",        help:"Physique." },
+    { id:'d10_5', label:"Adaptation des t\u00e2ches",         help:"Attendus." }
+  ]}
+];
+
+var SCALES = [
+  { value:0, label:"Non observ\u00e9" },
+  { value:1, label:"Difficult\u00e9 importante" },
+  { value:2, label:"Difficult\u00e9 mod\u00e9r\u00e9e" },
+  { value:3, label:"Satisfaisant" },
+  { value:4, label:"Force notable" }
+];
+
+var HELP_LEVELS = [
+  "Sans aide","Mat\u00e9riel seul","Aide humaine ponctuelle",
+  "Aide humaine constante","R\u00e9m\u00e9diation sp\u00e9cifique"
+];
+
+var PROFILES  = ["\u00c9ducateur","Enseignant","P\u00f4le territorial","CPMS","Th\u00e9rapeute"];
+var LEVELS    = ["Maternel","Primaire","Secondaire"];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+var state = {
+  step: 'welcome',
+  apiKey: '',
+  info: { code:'', profile:'', level:'', impactMoteur:'', impactCognitif:'', impactScolaire:'', impactRelationnel:'' },
+  responses: {},
+  domainIdx: 0,
+  aiSynthesis: '',
+  aiGoals: '',
+  aiLoadingSynth: false,
+  aiLoadingGoals: false,
+  errorMsg: '',
+  saveError: '',
+  showConfirmReset: false,
+  chartInstance: null
+};
+
+function setState(patch) {
+  Object.assign(state, patch);
+  render();
+}
+
+// ─── SCORES ───────────────────────────────────────────────────────────────────
+function calcScores() {
+  var domains = DOMAINS.map(function(d) {
+    var vals = d.items.map(function(i){ return state.responses[i.id] && state.responses[i.id].score; }).filter(function(v){ return v !== undefined && v !== null; });
+    var total = vals.reduce(function(a,b){ return a+b; }, 0);
+    var percent = vals.length > 0 ? (total / (d.items.length * 4)) * 100 : 0;
+    return { id:d.id, title:d.title, percent:percent, answered:vals.length };
+  });
+  var global = domains.length > 0 ? domains.reduce(function(a,b){ return a+b.percent; },0) / domains.length : 0;
+  return { domains:domains, global:global };
+}
+
+// ─── API ──────────────────────────────────────────────────────────────────────
+function callGemini(prompt, sysInstruction, onSuccess, onError) {
+  var key = state.apiKey ? state.apiKey.trim() : '';
+  if (!key) { onError("Cl\u00e9 API manquante."); return; }
+
+  var url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + key;
+  var payload = { contents:[{ role:"user", parts:[{ text:prompt }] }] };
+  if (sysInstruction) payload.system_instruction = { parts:[{ text:sysInstruction }] };
+
+  var done = false;
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', url, true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 40000;
+
+  xhr.ontimeout = function() {
+    if (done) return; done = true;
+    onError("D\u00e9lai d\u00e9pass\u00e9 (40s). V\u00e9rifiez votre connexion.");
+  };
+  xhr.onerror = function() {
+    if (done) return; done = true;
+    onError("Erreur r\u00e9seau. V\u00e9rifiez votre connexion internet.");
+  };
+  xhr.onload = function() {
+    if (done) return; done = true;
+    try {
+      var data = JSON.parse(xhr.responseText);
+      if (xhr.status !== 200) {
+        var msg = data && data.error && data.error.message ? data.error.message : 'Erreur ' + xhr.status;
+        if (xhr.status === 401 || xhr.status === 403) { onError("Cl\u00e9 API invalide ou acc\u00e8s refus\u00e9."); return; }
+        if (xhr.status === 429) { onError("Quota d\u00e9pass\u00e9. Patientez puis r\u00e9essayez."); return; }
+        onError("Erreur IA (" + xhr.status + ")\u00a0: " + msg); return;
+      }
+      var text = data.candidates && data.candidates[0] &&
+                 data.candidates[0].content && data.candidates[0].content.parts &&
+                 data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
+      if (!text) { onError("R\u00e9ponse vide. V\u00e9rifiez votre cl\u00e9 API."); return; }
+      onSuccess(text);
+    } catch(e) {
+      onError("Impossible de lire la r\u00e9ponse\u00a0: " + e.message);
+    }
+  };
+  xhr.send(JSON.stringify(payload));
+}
+
+// ─── SAVE / LOAD ──────────────────────────────────────────────────────────────
+function saveProject() {
+  try {
+    var data = JSON.stringify({ info:state.info, responses:state.responses, aiSynthesis:state.aiSynthesis, aiGoals:state.aiGoals, timestamp:new Date().toISOString() }, null, 2);
+    var blob = new Blob([data], { type:'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = 'obs_' + (state.info.code || 'projet') + '_' + new Date().toISOString().slice(0,10) + '.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    setState({ saveError:'' });
+  } catch(e) { setState({ saveError:"Erreur sauvegarde: " + e.message }); }
+}
+
+function loadProject(file) {
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      var data = JSON.parse(ev.target.result);
+      if (!data || !data.info || !data.responses) throw new Error("Fichier invalide.");
+      setState({ info:Object.assign({ code:'',profile:'',level:'',impactMoteur:'',impactCognitif:'',impactScolaire:'',impactRelationnel:'' }, data.info), responses:data.responses, aiSynthesis:data.aiSynthesis||'', aiGoals:data.aiGoals||'', step:'results', errorMsg:'', saveError:'' });
+    } catch(e) { alert("Impossible de charger: " + e.message); }
+  };
+  reader.onerror = function(){ alert("Erreur lecture fichier."); };
+  reader.readAsText(file);
+}
+
+// ─── CHART ────────────────────────────────────────────────────────────────────
+function drawChart() {
+  var el = document.getElementById('radar-canvas');
+  if (!el || typeof Chart === 'undefined') return;
+  if (state.chartInstance) { state.chartInstance.destroy(); state.chartInstance = null; }
+  var sc = calcScores();
+  state.chartInstance = new Chart(el.getContext('2d'), {
+    type:'radar',
+    data:{
+      labels: sc.domains.map(function(d){ return d.title.length > 14 ? d.title.slice(0,12)+'\u2026' : d.title; }),
+      datasets:[{ label:'Autonomie (%)', data:sc.domains.map(function(d){ return d.percent; }), backgroundColor:'rgba(29,78,216,0.15)', borderColor:'rgb(29,78,216)', borderWidth:2, pointBackgroundColor:'rgb(29,78,216)' }]
+    },
+    options:{ scales:{ r:{ min:0, max:100, ticks:{ display:false }, pointLabels:{ font:{ size:9, weight:'600' } } } }, plugins:{ legend:{ display:false } }, responsive:true, maintainAspectRatio:false }
+  });
+}
+
+function drawAideChart() {
+  var el = document.getElementById('aide-chart-canvas');
+  if (!el || typeof Chart === 'undefined') return;
+  if (window._aideChartInstance) { window._aideChartInstance.destroy(); window._aideChartInstance = null; }
+
+  // Count help levels across all responses
+  var counts = {};
+  HELP_LEVELS.forEach(function(hl){ counts[hl] = 0; });
+  Object.values(state.responses).forEach(function(r){
+    if (r && r.help && counts[r.help] !== undefined) counts[r.help]++;
+  });
+
+  var labels = HELP_LEVELS;
+  var data   = HELP_LEVELS.map(function(hl){ return counts[hl]; });
+  var colors = ['#22c55e','#84cc16','#f59e0b','#ef4444','#7c3aed'];
+
+  window._aideChartInstance = new Chart(el.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets:[{
+        label: "Nombre d'items",
+        data: data,
+        backgroundColor: colors.map(function(c){ return c + '33'; }),
+        borderColor: colors,
+        borderWidth: 2,
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(ctx){ return ' ' + ctx.raw + ' item' + (ctx.raw > 1 ? 's' : ''); }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { stepSize: 1, font: { size: 11 } },
+          grid: { color: 'rgba(0,0,0,0.05)' }
+        },
+        x: {
+          ticks: { font: { size: 10, weight: '600' } },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}
+
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+function h(tag, attrs, children) {
+  var el = document.createElement(tag);
+  if (attrs) {
+    Object.keys(attrs).forEach(function(k) {
+      var v = attrs[k];
+      if (k === 'className') el.className = v;
+      else if (k === 'htmlFor') el.setAttribute('for', v);
+      else if (k === 'style') Object.assign(el.style, v);
+      else if (k.startsWith('on')) el.addEventListener(k.slice(2).toLowerCase(), v);
+      else if (k === 'value') el.value = (v === null || v === undefined) ? '' : v;
+      else if (k === 'checked') el.checked = !!v;
+      else if (k === 'disabled') { if (v) el.disabled = true; }
+      else if (k === 'selected') { if (v) el.selected = true; }
+      else if (v !== null && v !== undefined && v !== false) el.setAttribute(k, v);
+    });
+  }
+  if (children !== null && children !== undefined) {
+    [].concat(children).forEach(function(c) {
+      if (c === null || c === undefined || c === false) return;
+      el.appendChild(typeof c === 'string' || typeof c === 'number' ? document.createTextNode(c) : c);
+    });
+  }
+  return el;
+}
+
+function hIcon(name, size) {
+  var wrap = document.createElement('span');
+  wrap.style.display = 'inline-flex';
+  wrap.style.alignItems = 'center';
+  wrap.innerHTML = icon(name, size || 18);
+  return wrap;
+}
+
+function hBtn(label, cls, onClick, disabled, isLoading) {
+  var btn = h('button', { className:'btn ' + cls, onClick:onClick, disabled: disabled||isLoading||false });
+  if (isLoading) {
+    var sp = hIcon('Loader2', 16);
+    sp.querySelector('svg').classList.add('spin');
+    btn.appendChild(sp);
+    btn.appendChild(document.createTextNode(' Chargement...'));
+  } else if (typeof label === 'string') {
+    btn.textContent = label;
+  } else {
+    [].concat(label).forEach(function(l) {
+      if (typeof l === 'string') btn.appendChild(document.createTextNode(l));
+      else btn.appendChild(l);
+    });
+  }
+  return btn;
+}
+
+function hCard(title, iconName, className, bodyFn) {
+  var wrap = h('div', { className:'card ' + (className||'') });
+  if (title) {
+    var hdr = h('div', { className:'card-header' });
+    if (iconName) hdr.appendChild(hIcon(iconName, 18));
+    hdr.appendChild(h('h3', { className:'font-semibold text-slate-800 tracking-tight', style:{fontSize:'0.875rem'} }, title));
+    wrap.appendChild(hdr);
+  }
+  var body = h('div', { className:'card-body' });
+  wrap.appendChild(body);      // body doit être rattaché AVANT bodyFn
+  if (bodyFn) bodyFn(body);    // body.parentElement === wrap désormais
+  return wrap;
+}
+
+// ─── SCREENS ──────────────────────────────────────────────────────────────────
+
+function renderWelcome(root) {
+  var wrap = h('div', { className:'max-w-4xl py-12 px-4' });
+
+  // Logo + title
+  var titleBlock = h('div', { className:'text-center mb-10' });
+  var logoWrap = h('div', { className:'inline-flex items-center justify-center mb-6', style:{display:'flex',justifyContent:'center',marginBottom:'1.5rem'} });
+  var logoImg = h('img', { src:'data:image/png;base64,' + window.LOGO_B64, alt:'Logo Perce-Neige', style:{width:'8rem',height:'auto',objectFit:'contain'} });
+  logoWrap.appendChild(logoImg);
+  titleBlock.appendChild(logoWrap);
+  titleBlock.appendChild(h('h1', { style:{fontSize:'2.25rem',fontWeight:'800',color:'#0f172a',letterSpacing:'-0.025em',marginBottom:'0.5rem'} }, "Outil d'Observation de l'int\u00e9gration scolaire"));
+  titleBlock.appendChild(h('p', { style:{color:'#475569',fontSize:'1.125rem'} }, "\u00c9valuation fonctionnelle et impact quotidien."));
+  wrap.appendChild(titleBlock);
+
+  // Two info cards
+  var grid = h('div', { className:'grid-2 mb-10' });
+  grid.appendChild(hCard("Garanties de Confidentialit\u00e9", "ShieldAlert", "", function(body){
+    body.innerHTML = '<ul style="font-size:0.875rem;color:#475569;list-style:none;display:flex;flex-direction:column;gap:0.75rem"><li><strong style="color:#16a34a">\u2705 Anonymat strict :</strong> aucune donn\u00e9e stock\u00e9e en ligne.</li><li><strong style="color:#16a34a">\u2705 Usage Interne :</strong> outil pour intervenants sp\u00e9cialis\u00e9s.</li><li><strong style="color:#16a34a">\u2705 Traitement local :</strong> les donn\u00e9es ne quittent pas votre session.</li></ul>';
+  }));
+  grid.appendChild(hCard("Objectifs de l'analyse", "BarChart3", "", function(body){
+    body.innerHTML = '<ul style="font-size:0.875rem;color:#475569;list-style:none;display:flex;flex-direction:column;gap:0.75rem"><li>\uD83C\uDFAF Cartographier les habilet\u00e9s scolaires.</li><li>\uD83C\uDFAF \u00c9valuer l\'impact de la pathologie au quotidien.</li><li>\uD83C\uDFAF Identifier les am\u00e9nagements raisonnables.</li></ul>';
+  }));
+  wrap.appendChild(grid);
+
+  // Action buttons
+  var btnRow = h('div', { className:'flex gap-4', style:{flexWrap:'wrap'} });
+  var startBtn = hBtn([hIcon('ChevronRight',20), " D\u00e9marrer l'observation"], "btn-primary btn-lg", function(){ setState({step:'info'}); window.scrollTo(0,0); });
+  startBtn.style.flex = '1';
+
+  var loadLabel = h('label', { htmlFor:'load-file', style:{flex:'1'} });
+  var loadBtn = hBtn([hIcon('Upload',18), " Charger un projet"], "btn-outline btn-lg", null);
+  loadBtn.style.width = '100%';
+  loadBtn.onclick = function(){ document.getElementById('load-file').click(); };
+  var fileInput = h('input', { type:'file', id:'load-file', accept:'.json', style:{display:'none'}, onChange:function(e){ if(e.target.files[0]){ loadProject(e.target.files[0]); e.target.value=''; } } });
+  loadLabel.appendChild(loadBtn);
+  loadLabel.appendChild(fileInput);
+
+  var demoBtn = hBtn([hIcon('Sparkles',18), " Charger un exemple"], "btn-outline btn-lg", loadDemoData);
+  demoBtn.style.flex = '1';
+  demoBtn.style.borderColor = '#c4b5fd';
+  demoBtn.style.color = '#7c3aed';
+
+  btnRow.appendChild(startBtn);
+  btnRow.appendChild(loadLabel);
+  btnRow.appendChild(demoBtn);
+  wrap.appendChild(btnRow);
+  root.appendChild(wrap);
+}
+
+function renderInfo(root) {
+  var wrap = h('div', { className:'max-w-4xl py-12 px-4' });
+
+  wrap.appendChild(hCard("Identification et Impacts Cliniques", "Stethoscope", "", function(body) {
+    // Row 1: code, profile, level
+    var row1 = h('div', { className:'grid-3', style:{marginBottom:'2rem'} });
+
+    var codeWrap = h('div');
+    codeWrap.appendChild(h('label', { htmlFor:'inf-code', className:'label text-slate-500' }, "ID Dossier"));
+    var codeInput = h('input', { type:'text', id:'inf-code', placeholder:"ID Dossier", value:state.info.code, onInput:function(e){ state.info.code=e.target.value; render(); } });
+    codeWrap.appendChild(codeInput);
+    var codeHint = h('p', { style:{fontSize:'0.7rem',color:'#64748b',marginTop:'0.35rem',lineHeight:'1.5',display:'flex',alignItems:'flex-start',gap:'0.3rem'} });
+    var lockSpan = document.createElement('span');
+    lockSpan.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+    codeHint.appendChild(lockSpan);
+    codeHint.appendChild(document.createTextNode("Cet identifiant remplace le nom de l\u2019\u00e9l\u00e8ve. Aucun nom ne figure dans ce document, garantissant ainsi l\u2019anonymat complet du dossier."));
+    codeWrap.appendChild(codeHint);
+    row1.appendChild(codeWrap);
+
+    var profWrap = h('div');
+    profWrap.appendChild(h('label', { htmlFor:'inf-profile', className:'label text-slate-500' }, "Profil intervenant"));
+    var profSel = h('select', { id:'inf-profile', onChange:function(e){ state.info.profile=e.target.value; render(); } });
+    profSel.appendChild(h('option',{value:''},"Profil..."));
+    PROFILES.forEach(function(p){ var o=h('option',{value:p},p); if(state.info.profile===p) o.selected=true; profSel.appendChild(o); });
+    profWrap.appendChild(profSel);
+    row1.appendChild(profWrap);
+
+    var levWrap = h('div');
+    levWrap.appendChild(h('label', { htmlFor:'inf-level', className:'label text-slate-500' }, "Niveau scolaire"));
+    var levSel = h('select', { id:'inf-level', onChange:function(e){ state.info.level=e.target.value; render(); } });
+    levSel.appendChild(h('option',{value:''},"Niveau..."));
+    LEVELS.forEach(function(l){ var o=h('option',{value:l},l); if(state.info.level===l) o.selected=true; levSel.appendChild(o); });
+    levWrap.appendChild(levSel);
+    row1.appendChild(levWrap);
+    body.appendChild(row1);
+
+    // Separator
+    var sep = h('div', {style:{borderTop:'1px solid #e2e8f0',paddingTop:'1.5rem',marginBottom:'1rem'}});
+    var sepNote = h('p', {style:{fontSize:'0.8rem',fontWeight:'700',color:'#1e293b',background:'#f1f5f9',padding:'0.75rem',borderRadius:'0.5rem',borderLeft:'4px solid #2563eb',lineHeight:'1.6'}}, "Impact de la pathologie au quotidien en rapport des divers facteurs relatifs \u00e0 son quotidien scolaire :");
+    sep.appendChild(sepNote);
+    body.appendChild(sep);
+
+    // 4 textareas
+    var impacts = [
+      { key:'impactMoteur',       label:"Plan Moteur" },
+      { key:'impactCognitif',     label:"Plan Cognitif / DYS" },
+      { key:'impactScolaire',     label:"Plan Scolaire" },
+      { key:'impactRelationnel',  label:"Plan Relationnel & Comportemental" }
+    ];
+    var grid2 = h('div', { className:'grid-2' });
+    impacts.forEach(function(imp) {
+      var w = h('div');
+      w.appendChild(h('label', { htmlFor:'imp-'+imp.key, className:'label text-slate-500', style:{marginBottom:'0.5rem'} }, imp.label));
+      var ta = h('textarea', { id:'imp-'+imp.key, placeholder:"D\u00e9crire...", rows:'4', style:{minHeight:'100px'}, onInput:function(e){ state.info[imp.key]=e.target.value; } }, state.info[imp.key]||'');
+      w.appendChild(ta);
+      grid2.appendChild(w);
+    });
+    body.appendChild(grid2);
+
+    // Nav buttons
+    var navRow = h('div', { style:{display:'flex',justifyContent:'space-between',marginTop:'2rem',gap:'1rem'} });
+    navRow.appendChild(hBtn("Retour", "btn-ghost", function(){ setState({step:'welcome'}); window.scrollTo(0,0); }));
+    var disabled = !state.info.code.trim() || !state.info.profile || !state.info.level;
+    var nextBtn = hBtn("Acc\u00e9der \u00e0 la grille", "btn-primary", function(){ setState({step:'observation',domainIdx:0}); window.scrollTo(0,0); }, disabled);
+    nextBtn.style.flex='1';
+    navRow.appendChild(nextBtn);
+    body.appendChild(navRow);
+  }));
+
+  root.appendChild(wrap);
+}
+
+function renderObservation(root) {
+  var sc = calcScores();
+  var dom = DOMAINS[state.domainIdx];
+
+  var wrap = h('div', { className:'max-w-7xl py-8 px-4' });
+  var layout = h('div', { className:'obs-layout' });
+
+  // ── Sidebar
+  var sidebar = h('aside', { className:'obs-sidebar no-print' });
+
+  // Progress
+  var progCard = h('div', { className:'card', style:{padding:'1rem',marginBottom:'1rem',textAlign:'center'} });
+  progCard.appendChild(h('p', { className:'label text-slate-400', style:{marginBottom:'0.5rem'} }, "Progression " + (state.domainIdx+1) + "/" + DOMAINS.length));
+  var track = h('div', { className:'progress-track', style:{height:'6px',marginTop:'0.5rem'} });
+  var fill  = h('div', { className:'progress-fill', style:{width: ((state.domainIdx+1)/DOMAINS.length*100)+'%',height:'6px'} });
+  track.appendChild(fill); progCard.appendChild(track);
+  sidebar.appendChild(progCard);
+
+  // Domain nav
+  var nav = h('nav', { style:{display:'flex',flexDirection:'column',gap:'0.25rem',maxHeight:'60vh',overflowY:'auto'}, className:'scrollbar-thin' });
+  DOMAINS.forEach(function(d, i) {
+    var isActive = i === state.domainIdx;
+    var btn = h('button', { className:'domain-btn' + (isActive?' active':''), onClick:function(){ setState({domainIdx:i}); window.scrollTo(0,0); } });
+    var textSpan = h('span', { style:{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'} }, (i+1)+'. '+d.title);
+    btn.appendChild(textSpan);
+    if (sc.domains[i].answered === d.items.length) {
+      var ck = hIcon('CheckCircle2', 14);
+      ck.style.color='#4ade80'; ck.style.flexShrink='0';
+      btn.appendChild(ck);
+    }
+    nav.appendChild(btn);
+  });
+  sidebar.appendChild(nav);
+
+  // Generate report button (always visible in sidebar)
+  var sideGenBtn = h('button', {
+    className: 'btn btn-success',
+    style: { width:'100%', marginTop:'1rem', padding:'0.875rem 1rem', fontSize:'0.9rem', fontWeight:'700', borderRadius:'0.75rem' },
+    onClick: function(){ setState({step:'results'}); window.scrollTo(0,0); }
+  });
+  var genIco = hIcon('BarChart3', 18);
+  sideGenBtn.appendChild(genIco);
+  sideGenBtn.appendChild(document.createTextNode(' Générer le rapport'));
+  sidebar.appendChild(sideGenBtn);
+
+  // Back to home button
+  var sideHomeBtn = h('button', {
+    className: 'btn btn-ghost',
+    style: { width:'100%', marginTop:'0.5rem', padding:'0.6rem 1rem', fontSize:'0.8rem', fontWeight:'600', borderRadius:'0.75rem', color:'#94a3b8', border:'1px solid #e2e8f0' },
+    onClick: function(){ setState({step:'welcome'}); window.scrollTo(0,0); }
+  });
+  var homeIco = hIcon('Home', 15);
+  sideHomeBtn.appendChild(homeIco);
+  sideHomeBtn.appendChild(document.createTextNode(" Retour à l'accueil"));
+  sidebar.appendChild(sideHomeBtn);
+
+  layout.appendChild(sidebar);
+
+  // ── Main
+  var main = h('div', { className:'obs-main' });
+
+  // Domain header
+  var domHdr = h('div', { className:'domain-header' });
+  domHdr.appendChild(h('h2', { style:{fontSize:'1.5rem',fontWeight:'900'} }, dom.title));
+  layout.appendChild(sidebar);
+  main.appendChild(domHdr);
+
+  // Items
+  dom.items.forEach(function(item) {
+    var itemCard = h('div', { className:'card', style:{marginBottom:'1rem'} });
+    var itemBody = h('div', { className:'card-body' });
+
+    itemBody.appendChild(h('h4', { style:{fontWeight:'700',color:'#1e293b',fontSize:'1.125rem',marginBottom:'0.25rem'} }, item.label));
+    itemBody.appendChild(h('p', { style:{fontSize:'0.75rem',color:'#94a3b8',fontStyle:'italic',marginBottom:'1.5rem',lineHeight:'1.6'} }, item.help));
+
+    // Score buttons
+    var fs = h('fieldset');
+    var legend = h('legend', { className:'sr-only' }, "Score pour: " + item.label);
+    fs.appendChild(legend);
+    var btnGrid = h('div', { className:'grid-5', style:{marginBottom:'1.5rem'} });
+    SCALES.forEach(function(s) {
+      var isActive = state.responses[item.id] && state.responses[item.id].score === s.value;
+      var sb = h('button', {
+        className:'score-btn' + (isActive?' active active-'+s.value:''),
+        'aria-label': s.value + ' - ' + s.label,
+        onClick:function() {
+          if (!state.responses[item.id]) state.responses[item.id] = {};
+          state.responses[item.id].score = s.value;
+          render();
+        }
+      });
+      sb.appendChild(h('span', { style:{fontSize:'1.125rem',fontWeight:'900'} }, ''+s.value));
+      sb.appendChild(h('span', { style:{fontSize:'0.5rem',fontWeight:'900',textTransform:'uppercase',lineHeight:'1.1',textAlign:'center'} }, s.label));
+      btnGrid.appendChild(sb);
+    });
+    fs.appendChild(btnGrid);
+    itemBody.appendChild(fs);
+
+    // Help + comment
+    var row2 = h('div', { className:'grid-2', style:{borderTop:'1px solid #f1f5f9',paddingTop:'1rem'} });
+
+    var helpWrap = h('div');
+    helpWrap.appendChild(h('label', { htmlFor:'help-'+item.id, className:'sr-only' }, "Aide pour: " + item.label));
+    var helpSel = h('select', { id:'help-'+item.id, style:{fontSize:'0.75rem',fontWeight:'700'},
+      onChange:function(e){
+        if (!state.responses[item.id]) state.responses[item.id]={};
+        state.responses[item.id].help = e.target.value;
+        render();
+      }
+    });
+    var curHelp = state.responses[item.id] && state.responses[item.id].help || '';
+    helpSel.appendChild(h('option',{value:''},"Niveau d'aide requis..."));
+    HELP_LEVELS.forEach(function(hl){ var o=h('option',{value:hl},hl); if(curHelp===hl) o.selected=true; helpSel.appendChild(o); });
+    helpWrap.appendChild(helpSel);
+
+    var commWrap = h('div');
+    commWrap.appendChild(h('label', { htmlFor:'com-'+item.id, className:'sr-only' }, "Observations pour: " + item.label));
+    var curComment = state.responses[item.id] && state.responses[item.id].comment || '';
+    var commTa = h('textarea', { id:'com-'+item.id, placeholder:"Pr\u00e9cisions / observations...", rows:'2', style:{height:'3.5rem',fontSize:'0.75rem'},
+      onInput:function(e){
+        if (!state.responses[item.id]) state.responses[item.id]={};
+        state.responses[item.id].comment = e.target.value;
+      }
+    }, curComment);
+    commWrap.appendChild(commTa);
+
+    row2.appendChild(helpWrap);
+    row2.appendChild(commWrap);
+    itemBody.appendChild(row2);
+    itemCard.appendChild(itemBody);
+    main.appendChild(itemCard);
+  });
+
+  // Nav buttons
+  var fnav = h('div', { className:'footer-nav' });
+  var prevBtn = hBtn("Pr\u00e9c\u00e9dent", "btn-outline", function(){ setState({domainIdx:Math.max(0,state.domainIdx-1)}); window.scrollTo(0,0); }, state.domainIdx===0);
+  fnav.appendChild(prevBtn);
+  if (state.domainIdx === DOMAINS.length-1) {
+    var genBtn = hBtn("G\u00e9n\u00e9rer le rapport", "btn-success", function(){ setState({step:'results'}); window.scrollTo(0,0); });
+    genBtn.style.padding = '0.625rem 2rem';
+    fnav.appendChild(genBtn);
+  } else {
+    var nextBtn2 = hBtn([" Suivant ", hIcon('ChevronRight',16)], "btn-primary", function(){ setState({domainIdx:state.domainIdx+1}); window.scrollTo(0,0); });
+    fnav.appendChild(nextBtn2);
+  }
+  main.appendChild(fnav);
+
+  layout.appendChild(main);
+  wrap.appendChild(layout);
+  root.appendChild(wrap);
+}
+
+function renderResults(root) {
+  var sc = calcScores();
+  var wrap = h('div', { className:'max-w-7xl py-12 px-4', style:{marginBottom:'5rem'} });
+
+  // Header
+  var hdr = h('header', { className:'no-print', style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:'2rem',borderBottom:'1px solid #e2e8f0',paddingBottom:'2.5rem',marginBottom:'3rem'} });
+  var hdrLeft = h('div');
+  hdrLeft.appendChild(h('h2',{style:{fontSize:'2.25rem',fontWeight:'800',color:'#0f172a',letterSpacing:'-0.025em'}},"Analyse Clinique Sp\u00e9cifique"));
+  hdrLeft.appendChild(h('p',{style:{color:'#64748b',marginTop:'0.5rem',fontSize:'1rem'}},[
+    "Dossier\u00a0: ",
+    h('strong',{style:{color:'#1d4ed8'}},state.info.code),
+    state.info.level ? h('span',{style:{marginLeft:'0.75rem',fontSize:'0.8rem',background:'#eff6ff',color:'#1d4ed8',padding:'0.15rem 0.5rem',borderRadius:'9999px',fontWeight:'600'}},state.info.level) : '',
+    state.info.profile ? h('span',{style:{marginLeft:'0.5rem',fontSize:'0.8rem',background:'#f1f5f9',color:'#475569',padding:'0.15rem 0.5rem',borderRadius:'9999px',fontWeight:'600'}},state.info.profile) : ''
+  ]));
+  hdr.appendChild(hdrLeft);
+
+  var btnRow = h('div', { style:{display:'flex',flexWrap:'wrap',gap:'0.75rem'} });
+  btnRow.appendChild(hBtn([hIcon('Save',16)," Sauvegarder .json"],"btn-success",saveProject));
+  btnRow.appendChild(hBtn([hIcon('Printer',16)," Imprimer / PDF"],"btn-primary",function(){ window.print(); }));
+  btnRow.appendChild(hBtn([hIcon('Trash2',16)," R\u00e9initialiser"],"btn-danger",function(){ setState({showConfirmReset:true}); }));
+  hdr.appendChild(btnRow);
+  wrap.appendChild(hdr);
+
+  // Reset modal
+  if (state.showConfirmReset) {
+    var overlay = h('div', { className:'modal-overlay no-print' });
+    var modal = h('div', { style:{background:'#fff',border:'1px solid #fecaca',borderRadius:'0.75rem',padding:'2rem',maxWidth:'28rem',width:'100%',textAlign:'center',boxShadow:'0 25px 50px -12px rgba(0,0,0,0.25)'} });
+    var wi = hIcon('AlertTriangle', 40);
+    wi.style.color='#dc2626'; wi.style.margin='0 auto 1rem';
+    modal.appendChild(wi);
+    modal.appendChild(h('h3',{style:{fontSize:'1.1rem',fontWeight:'700',marginBottom:'0.5rem'}},"Effacer la session ?"));
+    modal.appendChild(h('p',{style:{color:'#64748b',fontSize:'0.85rem',marginBottom:'1.5rem'}},"Toutes les donn\u00e9es non sauvegard\u00e9es seront perdues."));
+    var mbRow = h('div',{style:{display:'flex',gap:'1rem'}});
+    mbRow.appendChild(hBtn("Annuler","btn-outline",function(){ setState({showConfirmReset:false}); },false,false));
+    mbRow.appendChild(hBtn("Effacer","btn-danger",function(){
+      if (state.chartInstance) { state.chartInstance.destroy(); state.chartInstance = null; }
+      state.responses={}; state.info={code:'',profile:'',level:'',impactMoteur:'',impactCognitif:'',impactScolaire:'',impactRelationnel:''};
+      state.aiSynthesis=''; state.aiGoals=''; state.errorMsg=''; state.saveError=''; state.domainIdx=0; state.showConfirmReset=false;
+      setState({step:'welcome'}); window.scrollTo(0,0);
+    }));
+    modal.appendChild(mbRow);
+    overlay.appendChild(modal);
+    wrap.appendChild(overlay);
+  }
+
+  // Errors
+  if (state.errorMsg) {
+    var err = h('div', { className:'alert alert-red no-print', style:{marginBottom:'1.5rem'}, role:'alert' }, [hIcon('AlertTriangle',18), " " + state.errorMsg]);
+    wrap.appendChild(err);
+  }
+  if (state.saveError) {
+    var serr = h('div', { className:'alert alert-orange no-print', style:{marginBottom:'1.5rem'}, role:'alert' }, state.saveError);
+    wrap.appendChild(serr);
+  }
+
+  // Radar card
+  wrap.appendChild(hCard("Profil d'Autonomie Global","","",function(body){
+    body.parentElement.style.borderColor='#bfdbfe'; body.parentElement.style.background='rgba(239,246,255,0.2)';
+    var radarLayout = h('div',{className:'grid-radar',style:{padding:'1rem'}});
+
+    // Left: score summary
+    var leftCol = h('div',{style:{textAlign:'center'}});
+    var gPct = Math.round(sc.global);
+    var gColor = gPct>70?'#16a34a':gPct<40?'#dc2626':'#1d4ed8';
+    leftCol.appendChild(h('p',{className:'label text-slate-400',style:{marginBottom:'0.5rem'}},"Taux d'autonomie moyen"));
+    leftCol.appendChild(h('p',{style:{fontSize:'3.75rem',fontWeight:'900',color:gColor}},gPct+'%'));
+    var pTrack = h('div',{className:'progress-track',style:{height:'8px',marginTop:'1rem',marginBottom:'1.5rem'}});
+    pTrack.appendChild(h('div',{className:'progress-fill',style:{width:sc.global+'%',height:'8px',background:gColor}}));
+    leftCol.appendChild(pTrack);
+
+    // Mini legend
+    sc.domains.forEach(function(d){
+      var row = h('div',{style:{display:'flex',alignItems:'center',gap:'0.5rem',marginBottom:'0.2rem'}});
+      var dot = h('div',{style:{width:'8px',height:'8px',borderRadius:'50%',flexShrink:'0',background:d.percent>=70?'#22c55e':d.percent<40?'#f87171':'#fbbf24'}});
+      var titleEl = h('span',{style:{fontSize:'0.65rem',color:'#64748b',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',flex:'1'}},d.title);
+      var pctEl  = h('span',{style:{fontSize:'0.65rem',fontWeight:'700',color:'#1e293b',marginLeft:'auto',flexShrink:'0'}},Math.round(d.percent)+'%');
+      row.appendChild(dot); row.appendChild(titleEl); row.appendChild(pctEl);
+      leftCol.appendChild(row);
+    });
+    radarLayout.appendChild(leftCol);
+
+    // Right: canvas
+    var canvasWrap = h('div',{className:'chart-print-wrap',style:{height:'300px',background:'#fff',borderRadius:'1rem',padding:'1rem',border:'1px solid #f1f5f9',boxShadow:'inset 0 2px 4px rgba(0,0,0,0.06)'}});
+    var canvas = h('canvas',{id:'radar-canvas','aria-label':'Graphique radar',role:'img'});
+    canvasWrap.appendChild(canvas);
+    radarLayout.appendChild(canvasWrap);
+    body.appendChild(radarLayout);
+  }));
+
+  // Aide chart card
+  wrap.appendChild(hCard("Répartition des niveaux d'aide requis","ShieldAlert","",function(body){
+    body.parentElement.style.borderColor='#e0e7ff'; body.parentElement.style.background='rgba(238,242,255,0.15)';
+
+    // Summary pills
+    var pillRow = h('div',{style:{display:'flex',flexWrap:'wrap',gap:'0.5rem',marginBottom:'1.25rem'}});
+    var helpCounts = {};
+    HELP_LEVELS.forEach(function(hl){ helpCounts[hl]=0; });
+    Object.values(state.responses).forEach(function(r){ if(r&&r.help&&helpCounts[r.help]!==undefined) helpCounts[r.help]++; });
+    var pillColors = {'Sans aide':'#16a34a','Matériel seul':'#65a30d','Aide humaine ponctuelle':'#d97706','Aide humaine constante':'#dc2626','Rémédiation spécifique':'#7c3aed'};
+    HELP_LEVELS.forEach(function(hl){
+      var c = helpCounts[hl];
+      var pill = h('span',{style:{
+        display:'inline-flex',alignItems:'center',gap:'0.35rem',
+        padding:'0.3rem 0.75rem',borderRadius:'9999px',fontSize:'0.7rem',fontWeight:'700',
+        background: c > 0 ? pillColors[hl]+'22' : '#f1f5f9',
+        color: c > 0 ? pillColors[hl] : '#94a3b8',
+        border:'1px solid ' + (c > 0 ? pillColors[hl]+'55' : '#e2e8f0')
+      }}, hl + ' — ' + c + ' item' + (c>1?'s':''));
+      pillRow.appendChild(pill);
+    });
+    body.appendChild(pillRow);
+
+    // Canvas
+    var chartWrap = h('div',{className:'aide-chart-print-wrap',style:{height:'220px',position:'relative'}});
+    chartWrap.appendChild(h('canvas',{id:'aide-chart-canvas'}));
+    body.appendChild(chartWrap);
+  }));
+
+  // Clinical impacts
+  wrap.appendChild(hCard("Impacts Cliniques Multidimensionnels","Stethoscope","",function(body){
+    var g = h('div',{className:'grid-4'});
+    [
+      {key:'impactMoteur',label:"Plan Moteur"},
+      {key:'impactCognitif',label:"Plan Cognitif"},
+      {key:'impactScolaire',label:"Plan Scolaire"},
+      {key:'impactRelationnel',label:"Plan Relationnel"}
+    ].forEach(function(imp){
+      var box = h('div',{style:{background:'#f8fafc',padding:'1rem',borderRadius:'1rem',border:'1px solid #f1f5f9'}});
+      box.appendChild(h('h5',{className:'label text-amber-700',style:{marginBottom:'0.75rem',letterSpacing:'0.1em'}},imp.label));
+      box.appendChild(h('p',{style:{fontSize:'0.7rem',color:'#334155',lineHeight:'1.6',minHeight:'60px',whiteSpace:'pre-wrap',fontStyle:'italic'}},'"'+(state.info[imp.key]||'—')+'"'));
+      g.appendChild(box);
+    });
+    body.appendChild(g);
+  }));
+
+  // Detailed table
+  var tableSection = h('section',{style:{marginTop:'3rem'},className:'page-break'});
+  var tableHdr = h('div',{style:{display:'flex',alignItems:'center',gap:'1rem',borderBottom:'4px solid #0f172a',paddingBottom:'1rem',marginBottom:'2rem'}});
+  var listIco = hIcon('ListChecks',36);
+  listIco.style.color='#1d4ed8';
+  tableHdr.appendChild(listIco);
+  tableHdr.appendChild(h('h3',{style:{fontSize:'1.875rem',fontWeight:'900',color:'#0f172a',textTransform:'uppercase',letterSpacing:'-0.05em'}},"Relev\u00e9 exhaustif des observations"));
+  tableSection.appendChild(tableHdr);
+
+  DOMAINS.forEach(function(domain) {
+    var ds = sc.domains.find(function(d){ return d.id===domain.id; });
+    var pct = Math.round(ds.percent);
+    var pctColor = pct>=70?'#16a34a':pct<40?'#dc2626':'#b45309';
+
+    var domWrap = h('div',{style:{border:'2px solid #e2e8f0',borderRadius:'1.5rem',overflow:'hidden',marginBottom:'1.5rem',background:'#fff',boxShadow:'0 1px 3px rgba(0,0,0,0.05)'}});
+    var domHead = h('div',{style:{background:'#0f172a',color:'#fff',padding:'1rem 2rem',display:'flex',justifyContent:'space-between',alignItems:'center'}});
+    domHead.appendChild(h('span',{style:{fontWeight:'900',textTransform:'uppercase',letterSpacing:'0.05em',fontSize:'0.8rem'}},domain.title));
+    var badge = h('span',{style:{fontSize:'0.65rem',padding:'0.2rem 0.75rem',borderRadius:'9999px',fontWeight:'700',background:'rgba(255,255,255,0.1)',color:pct>=70?'#4ade80':pct<40?'#f87171':'#fbbf24'}},"Score\u00a0: "+pct+"%");
+    domHead.appendChild(badge);
+    domWrap.appendChild(domHead);
+
+    var tbl = h('table');
+    var thead = h('thead');
+    var hr = h('tr');
+    ['Item','Score','Aide requise','Observations'].forEach(function(col, ci){
+      var th = h('th',{scope:'col'},col);
+      if(ci===0) th.style.width='35%';
+      if(ci===1) th.style.width='8%';
+      if(ci===2) th.style.width='18%';
+      hr.appendChild(th);
+    });
+    thead.appendChild(hr); tbl.appendChild(thead);
+
+    var tbody = h('tbody');
+    domain.items.forEach(function(item){
+      var res = state.responses[item.id] || {};
+      var tr = h('tr');
+
+      var td1 = h('td');
+      td1.appendChild(h('span',{style:{fontWeight:'700',fontSize:'0.85rem',color:'#1e293b'}},item.label));
+      td1.appendChild(h('br'));
+      td1.appendChild(h('span',{style:{fontSize:'0.65rem',color:'#94a3b8',fontStyle:'italic'}},item.help));
+      tr.appendChild(td1);
+
+      var td2 = h('td',{style:{textAlign:'center'}});
+      var scoreCls = 'score-empty';
+      if (res.score !== undefined) {
+        if (res.score === 0) scoreCls = 'score-0';
+        else if (res.score === 1) scoreCls = 'score-1';
+        else if (res.score === 2) scoreCls = 'score-2';
+        else scoreCls = 'score-3';
+      }
+      var scoreEl = h('div',{className:'score-badge '+scoreCls}, res.score!==undefined?''+res.score:'—');
+      td2.appendChild(scoreEl);
+      tr.appendChild(td2);
+
+      tr.appendChild(h('td',{style:{fontSize:'0.7rem',fontWeight:'700',textTransform:'uppercase',textAlign:'center',color:'#475569',lineHeight:'1.3'}},res.help||'—'));
+      tr.appendChild(h('td',{style:{fontSize:'0.75rem',color:'#475569',fontStyle:'italic',lineHeight:'1.5'}},res.comment||'—'));
+      tbody.appendChild(tr);
+    });
+    tbl.appendChild(tbody);
+    var tblWrap = h('div',{style:{overflowX:'auto'}}); tblWrap.appendChild(tbl);
+    domWrap.appendChild(tblWrap);
+    tableSection.appendChild(domWrap);
+  });
+  wrap.appendChild(tableSection);
+
+  // ── Prompt Generators Section ─────────────────────────────────────────────
+  var promptSection = h('div', { className:'no-print', style:{marginTop:'3rem',paddingTop:'2.5rem',borderTop:'4px solid #1e3a8a'} });
+
+  // Header
+  var promptHdr = h('div',{style:{display:'flex',alignItems:'center',gap:'1rem',marginBottom:'0.5rem'}});
+  var promptIco = hIcon('Wand2', 32);
+  promptIco.style.color = '#1d4ed8';
+  promptHdr.appendChild(promptIco);
+  var promptTitleWrap = h('div');
+  promptTitleWrap.appendChild(h('h3',{style:{fontSize:'1.5rem',fontWeight:'900',color:'#0f172a',letterSpacing:'-0.025em'}},'Générateurs de prompts IA'));
+  promptTitleWrap.appendChild(h('p',{style:{fontSize:'0.8rem',color:'#64748b',marginTop:'0.25rem'}},'Copiez le prompt généré dans l’IA de votre choix (Claude, ChatGPT, Gemini…) pour créer le document souhaité.'));
+  promptHdr.appendChild(promptTitleWrap);
+  promptSection.appendChild(promptHdr);
+
+  // Helper: build context from current state
+  function buildPromptContext() {
+    var pSc = calcScores();
+    var ctx = '';
+    ctx += 'DOSSIER : ' + (state.info.code||'Anonyme') + '\n';
+    ctx += 'NIVEAU SCOLAIRE : ' + (state.info.level||'Non renseigné') + '\n';
+    ctx += 'PROFIL INTERVENANT : ' + (state.info.profile||'Non renseigné') + '\n\n';
+    ctx += 'IMPACTS CLINIQUES :\n';
+    ctx += '- Plan Moteur : ' + (state.info.impactMoteur||'Non renseigné') + '\n';
+    ctx += '- Plan Cognitif/DYS : ' + (state.info.impactCognitif||'Non renseigné') + '\n';
+    ctx += '- Plan Scolaire : ' + (state.info.impactScolaire||'Non renseigné') + '\n';
+    ctx += '- Plan Relationnel : ' + (state.info.impactRelationnel||'Non renseigné') + '\n\n';
+    ctx += 'SCORES PAR DOMAINE :\n';
+    pSc.domains.forEach(function(d){ ctx += '- ' + d.title + ' : ' + Math.round(d.percent) + '%\n'; });
+    var weak = pSc.domains.filter(function(d){return d.percent<50;});
+    if (weak.length > 0) {
+      ctx += '\nDOMAINES FRAGILISÉS (<50%) : ' + weak.map(function(d){return d.title + ' (' + Math.round(d.percent) + '%)'}).join(', ') + '\n';
+    }
+    var strong = pSc.domains.filter(function(d){return d.percent>=70;});
+    if (strong.length > 0) {
+      ctx += 'POINTS FORTS (\u226570%) : ' + strong.map(function(d){return d.title + ' (' + Math.round(d.percent) + '%)'}).join(', ') + '\n';
+    }
+    // Help levels summary
+    var helpCts = {};
+    ['Sans aide','Matériel seul','Aide humaine ponctuelle','Aide humaine constante','Rémédiation spécifique'].forEach(function(hl){helpCts[hl]=0;});
+    Object.values(state.responses).forEach(function(r){if(r&&r.help&&helpCts[r.help]!==undefined)helpCts[r.help]++;});
+    ctx += '\nRÉPARTITION DES AIDES REQUISES :\n';
+    Object.keys(helpCts).forEach(function(k){ if(helpCts[k]>0) ctx += '- ' + k + ' : ' + helpCts[k] + ' item(s)\n'; });
+    return ctx;
+  }
+
+  // Helper: create a prompt card
+  function makePromptCard(title, iconName, description, buildPrompt) {
+    var card = h('div',{style:{background:'#fff',border:'1px solid #e2e8f0',borderRadius:'0.75rem',overflow:'hidden',boxShadow:'0 1px 3px rgba(0,0,0,0.07)',marginBottom:'1.25rem'}});
+    var cardHdr = h('div',{style:{padding:'1rem 1.5rem',background:'#f8fafc',borderBottom:'1px solid #f1f5f9',display:'flex',alignItems:'center',gap:'0.75rem'}});
+    var ico = hIcon(iconName, 18);
+    ico.style.color='#1d4ed8';
+    cardHdr.appendChild(ico);
+    cardHdr.appendChild(h('h4',{style:{fontWeight:'700',fontSize:'0.9rem',color:'#1e293b'}},title));
+    card.appendChild(cardHdr);
+
+    var cardBody = h('div',{style:{padding:'1.25rem 1.5rem'}});
+    cardBody.appendChild(h('p',{style:{fontSize:'0.8rem',color:'#64748b',marginBottom:'1rem',lineHeight:'1.6'}},description));
+
+    var taId = 'prompt-ta-' + Math.random().toString(36).slice(2,8);
+    var ta = h('textarea',{id:taId,rows:'8',style:{
+      width:'100%',padding:'0.75rem',background:'#f8fafc',border:'1px solid #e2e8f0',
+      borderRadius:'0.5rem',fontSize:'0.75rem',lineHeight:'1.7',color:'#334155',
+      resize:'vertical',display:'none',fontFamily:'monospace'
+    }});
+    cardBody.appendChild(ta);
+
+    var btnRow2 = h('div',{style:{display:'flex',gap:'0.75rem',marginTop:'0.75rem',flexWrap:'wrap'}});
+
+    var genPromptBtn = h('button',{
+      className:'btn btn-primary',
+      style:{fontSize:'0.8rem',padding:'0.5rem 1.25rem'}
+    });
+    genPromptBtn.appendChild(hIcon('Wand2',15));
+    genPromptBtn.appendChild(document.createTextNode(' Générer le prompt'));
+
+    var copyBtn = h('button',{
+      className:'btn btn-outline',
+      style:{fontSize:'0.8rem',padding:'0.5rem 1.25rem',display:'none'}
+    });
+    copyBtn.appendChild(hIcon('Save',15));
+    copyBtn.appendChild(document.createTextNode(' Copier'));
+
+    genPromptBtn.onclick = function() {
+      var promptText = buildPrompt();
+      ta.value = promptText;
+      ta.style.display = 'block';
+      copyBtn.style.display = 'inline-flex';
+      genPromptBtn.textContent = '';
+      genPromptBtn.appendChild(document.createTextNode('↻ Regénérer'));
+    };
+
+    copyBtn.onclick = function() {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(ta.value).then(function(){
+          var orig = copyBtn.textContent;
+          copyBtn.textContent = '✓ Copié !';
+          setTimeout(function(){ copyBtn.textContent = ''; copyBtn.appendChild(hIcon('Save',15)); copyBtn.appendChild(document.createTextNode(' Copier')); }, 2000);
+        });
+      } else {
+        ta.select(); document.execCommand('copy');
+      }
+    };
+
+    btnRow2.appendChild(genPromptBtn);
+    btnRow2.appendChild(copyBtn);
+    cardBody.appendChild(btnRow2);
+    card.appendChild(cardBody);
+    return card;
+  }
+
+  var promptGrid = h('div',{style:{marginTop:'1.5rem',display:'flex',flexDirection:'column',gap:'0'}});
+
+  // ── Prompt 1 : Synthèse du rapport
+  promptGrid.appendChild(makePromptCard(
+    '1 — Synthèse clinique du rapport',
+    'Sparkles',
+    'Génère un prompt prêt à coller dans une IA pour obtenir une synthèse clinique professionnelle et structurée, à partir des données d’observation.',
+    function() {
+      var ctx = buildPromptContext();
+      return 'Tu es un expert en handicap et en éducation inclusive francophone (contexte belge FWB). Sur base des données d’observation ci-dessous, rédige une synthèse clinique structurée et professionnelle en français. La synthèse doit :\n- Présenter le profil global de l’élève et les impacts de sa pathologie\n- Identifier les domaines de forces et les domaines fragilisés\n- Décrire les besoins prioritaires observés\n- Adopter un style neutre, professionnel et bienveillant\n- Être structurée avec des sous-titres clairs\n- Faire environ 400-600 mots\n\n--- DONNÉES D’OBSERVATION ---\n' + ctx;
+    }
+  ));
+
+  // ── Prompt 2 : Objectifs SMART
+  promptGrid.appendChild(makePromptCard(
+    '2 — Objectifs SMART en lien avec les besoins',
+    'ListChecks',
+    'Génère un prompt pour formuler des objectifs SMART concrets, directement liés aux besoins prioritaires identifiés dans le rapport d’observation.',
+    function() {
+      var ctx = buildPromptContext();
+      var pSc2 = calcScores();
+      var weakDomains = pSc2.domains.filter(function(d){return d.percent<50;}).map(function(d){return d.title;}).join(', ');
+      return 'Tu es un expert pédagogique spécialisé en inclusion scolaire (contexte FWB belge). Sur base des données d’observation ci-dessous, formule des objectifs SMART pour cet élève. Les objectifs doivent :\n- Être au nombre de 3 à 5\n- Être directement liés aux domaines fragilisés suivants : ' + (weakDomains||'domaines identifiés dans les scores') + '\n- Respecter le format SMART : Spécifique, Mesurable, Atteignable, Réaliste, Temporellement défini\n- Être formulés de manière positive et centrée sur les compétences\n- Inclure pour chaque objectif : l’intitulé, les indicateurs de mesure, les moyens/aménagements associés, et un délai réaliste\n\n--- DONNÉES D’OBSERVATION ---\n' + ctx;
+    }
+  ));
+
+  // ── Prompt 3 : Aménagements raisonnables FWB
+  promptGrid.appendChild(makePromptCard(
+    '3 — Aménagements raisonnables (typologies FWB)',
+    'ShieldAlert',
+    'Génère un prompt pour identifier les aménagements raisonnables adaptés au profil de l’élève, selon les typologies officielles de la Fédération Wallonie-Bruxelles.',
+    function() {
+      var ctx = buildPromptContext();
+      return 'Tu es un expert en aménagements raisonnables dans le cadre du décret inclusion de la Fédération Wallonie-Bruxelles (FWB). Sur base des données d’observation ci-dessous, identifie et décris les aménagements raisonnables les plus appropriés pour cet élève. Organise ta réponse selon les typologies officielles FWB :\n\n1. AMÉNAGEMENTS MATÉRIELS : adaptation du matériel scolaire, outils compensatoires, accessibilité\n2. AMÉNAGEMENTS ORGANISATIONNELS : gestion du temps, organisation des tâches, pauses, transitions\n3. AMÉNAGEMENTS PÉDAGOGIQUES : adaptation des supports, des consignes, des activités, de l’évaluation\n4. AMÉNAGEMENTS HUMAINS : soutien humain (aide ponctuelle, constante, ACS, logopède, etc.)\n5. AMÉNAGEMENTS ENVIRONNEMENTAUX : aménagement de l’espace classe, réduction des distracteurs\n\nPour chaque aménagement proposé, précise :\n- Son intitulé et description concrète\n- Sa justification par rapport aux besoins observés\n- Les acteurs concernés (enseignant, éducateur, CPMS, équipe pluridisciplinaire)\n- Le cadre légal FWB applicable si pertinent\n\n--- DONNÉES D’OBSERVATION ---\n' + ctx;
+    }
+  ));
+
+  promptSection.appendChild(promptGrid);
+  wrap.appendChild(promptSection);
+
+  // Footer
+  wrap.appendChild(h('footer',{style:{paddingTop:'2.5rem',borderTop:'1px solid #e2e8f0',textAlign:'center',fontSize:'0.65rem',color:'#94a3b8',fontStyle:'italic',marginTop:'2rem'}},"Document confidentiel \u00e0 usage professionnel exclusif \u2014 Z\u00e9ro stockage serveur"));
+
+  root.appendChild(wrap);
+}
+
+
+// ─── DEMO DATA ────────────────────────────────────────────────────────────────
+function loadDemoData() {
+  // Données fictives : élève TDI + TDAH, cycle secondaire
+  state.info = {
+    code: 'DEMO-2025-001',
+    profile: 'Éducateur',
+    level: 'Secondaire',
+    impactMoteur: 'Fatigue musculaire rapide lors des déplacements longs. Difficultés à maintenir une posture assise prolongée au-delà de 45 min. Utilise un coussin ergonomique. Pas de fauteuil roulant mais marche ralentie.',
+    impactCognitif: 'TDAH de type combiné. Difficultés majeures de maintien attentionnel et d’inhibition des réponses impulsives. Dysorthographie associée. Mémoire de travail réduite.',
+    impactScolaire: 'Retard scolaire estimé à 1,5 an en lecture/écriture. Mathématiques préservées. Bonne compréhension orale. Production écrite laborieuse et lente.',
+    impactRelationnel: 'Tendance à l’isolement en récréation. Bonnes relations avec 2-3 pairs stables. Réactions émotionnelles parfois disproportionnées face aux conflits ou critiques.'
+  };
+
+  // Scores fictifs pour tous les items
+  var demoScores = {
+    // D1 - Accès physique
+    d1_1:3, d1_2:3, d1_3:2, d1_4:2, d1_5:3, d1_6:3, d1_7:1, d1_8:1,
+    // D2 - Autonomie scolaire
+    d2_1:2, d2_2:1, d2_3:2, d2_4:1, d2_5:3, d2_6:1, d2_7:3, d2_8:3, d2_9:2,
+    // D3 - Capacités exécutives
+    d3_1:1, d3_2:2, d3_3:1, d3_4:1, d3_5:2, d3_6:2, d3_7:1, d3_8:1,
+    // D4 - Capacités pédagogiques
+    d4_1:2, d4_2:3, d4_3:2, d4_4:1, d4_5:3, d4_6:4, d4_7:2, d4_8:2, d4_9:1,
+    // D5 - Participation classe
+    d5_1:2, d5_2:3, d5_3:3, d5_4:2, d5_5:2, d5_6:1,
+    // D6 - Relations sociales
+    d6_1:2, d6_2:2, d6_3:2, d6_4:1, d6_5:2, d6_6:1, d6_7:2,
+    // D7 - Gestion émotionnelle
+    d7_1:1, d7_2:1, d7_3:2, d7_4:3, d7_5:2, d7_6:1,
+    // D8 - Fatigue
+    d8_1:2, d8_2:1, d8_3:2, d8_4:1, d8_5:2,
+    // D9 - Collaboration
+    d9_1:3, d9_2:3, d9_3:2, d9_4:2, d9_5:2,
+    // D10 - Aménagements
+    d10_1:3, d10_2:3, d10_3:3, d10_4:2, d10_5:2
+  };
+
+  var demoHelp = {
+    d1_7:'Aide humaine ponctuelle', d1_8:'Aide humaine ponctuelle',
+    d2_2:'Aide humaine constante', d2_4:'Matériel seul', d2_6:'Aide humaine constante',
+    d3_1:'Aide humaine constante', d3_3:'Aide humaine constante', d3_8:'Matériel seul',
+    d4_4:'Matériel seul', d4_9:'Aménagements pédagogiques',
+    d5_6:'Aide humaine ponctuelle',
+    d6_4:'Aide humaine ponctuelle', d6_6:'Aide humaine ponctuelle',
+    d7_1:'Aide humaine ponctuelle', d7_2:'Aide humaine ponctuelle',
+    d8_2:'Aide humaine constante', d8_4:'Aide humaine ponctuelle',
+    d10_2:'Matériel seul', d10_3:'Matériel seul'
+  };
+
+  var demoComments = {
+    d1_7: 'Dispense de certains exercices physiques intenses. Participe aux échauffements.',
+    d1_8: 'Nécessite du temps de repos entre les bâtiments. Classe proche de l’entrée.',
+    d2_2: 'Cartable souvent désordonné malgré les rappels. Fiches code couleur partiellement efficaces.',
+    d2_4: 'Utilise un stylo ergonomique et un PC portable pour les cours théoriques.',
+    d2_6: 'Timer visuel mis en place. Encore difficile sans rappel de l’adulte.',
+    d3_1: 'Peut maintenir l’attention environ 15 min en continu. Pause active toutes les 20 min.',
+    d3_3: 'Répond impulsivement. Stratégie de la main levée partiellement intégrée.',
+    d4_4: 'Production écrite limitée en longueur. Dictée vocale utilisée pour les rédactions.',
+    d6_4: 'Réagit fort aux moqueries. Suivi CPMS en cours pour la gestion des conflits.',
+    d7_2: 'Anxiété notable avant les évaluations. Respiration guidée avec l’éducateur.',
+    d8_2: 'Forte fatigue cognitive en fin de journée. Adaptation du planning préconisée.',
+  };
+
+  state.responses = {};
+  Object.keys(demoScores).forEach(function(id) {
+    state.responses[id] = { score: demoScores[id] };
+    if (demoHelp[id]) state.responses[id].help = demoHelp[id];
+    if (demoComments[id]) state.responses[id].comment = demoComments[id];
+  });
+
+  setState({ step: 'results' });
+  window.scrollTo(0, 0);
+}
+
+// ─── MAIN RENDER ──────────────────────────────────────────────────────────────
+function render() {
+  // Save focus state before rebuilding DOM
+  var activeId = document.activeElement ? document.activeElement.id : null;
+  var activeStart = null, activeEnd = null;
+  if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+    try { activeStart = document.activeElement.selectionStart; activeEnd = document.activeElement.selectionEnd; } catch(e) {}
+  }
+
+  var root = document.getElementById('app');
+  root.innerHTML = '';
+
+  if (state.step === 'welcome')          renderWelcome(root);
+  else if (state.step === 'info')        renderInfo(root);
+  else if (state.step === 'observation') renderObservation(root);
+  else if (state.step === 'results')     { renderResults(root); setTimeout(drawChart, 50); setTimeout(drawAideChart, 80); }
+
+  // Restore focus and cursor position
+  if (activeId) {
+    var el = document.getElementById(activeId);
+    if (el) {
+      el.focus();
+      if (activeStart !== null && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) {
+        try { el.setSelectionRange(activeStart, activeEnd); } catch(e) {}
+      }
+    }
+  }
+}
+
+
+// ── Print: redraw charts at fixed size to avoid deformation
+function redrawChartsForPrint() {
+  // Radar
+  var radarEl = document.getElementById('radar-canvas');
+  if (radarEl && state.chartInstance) {
+    state.chartInstance.destroy();
+    state.chartInstance = null;
+    radarEl.width  = 420;
+    radarEl.height = 320;
+    state.chartInstance = new Chart(radarEl.getContext('2d'), buildRadarConfig());
+  }
+  // Aide bar chart
+  var aideEl = document.getElementById('aide-chart-canvas');
+  if (aideEl && window._aideChartInstance) {
+    window._aideChartInstance.destroy();
+    window._aideChartInstance = null;
+    aideEl.width  = 600;
+    aideEl.height = 240;
+    window._aideChartInstance = new Chart(aideEl.getContext('2d'), buildAideConfig());
+  }
+}
+
+function buildRadarConfig() {
+  var sc = calcScores();
+  return {
+    type:'radar',
+    data:{
+      labels: sc.domains.map(function(d){ return d.title.length > 14 ? d.title.slice(0,12)+'…' : d.title; }),
+      datasets:[{ label:'Autonomie (%)', data:sc.domains.map(function(d){ return d.percent; }), backgroundColor:'rgba(29,78,216,0.15)', borderColor:'rgb(29,78,216)', borderWidth:2, pointBackgroundColor:'rgb(29,78,216)' }]
+    },
+    options:{ animation:false, scales:{ r:{ min:0, max:100, ticks:{ display:false }, pointLabels:{ font:{ size:9, weight:'600' } } } }, plugins:{ legend:{ display:false } }, responsive:false, maintainAspectRatio:false }
+  };
+}
+
+function buildAideConfig() {
+  var counts = {};
+  HELP_LEVELS.forEach(function(hl){ counts[hl] = 0; });
+  Object.values(state.responses).forEach(function(r){
+    if (r && r.help && counts[r.help] !== undefined) counts[r.help]++;
+  });
+  var colors = ['#22c55e','#84cc16','#f59e0b','#ef4444','#7c3aed'];
+  return {
+    type: 'bar',
+    data: {
+      labels: HELP_LEVELS,
+      datasets:[{ label:"Nombre d'items", data:HELP_LEVELS.map(function(hl){ return counts[hl]; }), backgroundColor:colors.map(function(c){ return c+'33'; }), borderColor:colors, borderWidth:2, borderRadius:6 }]
+    },
+    options:{ animation:false, responsive:false, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, ticks:{ stepSize:1, font:{ size:11 } }, grid:{ color:'rgba(0,0,0,0.05)' } }, x:{ ticks:{ font:{ size:10, weight:'600' } }, grid:{ display:false } } } }
+  };
+}
+
+window.addEventListener('beforeprint', function() {
+  redrawChartsForPrint();
+});
+window.addEventListener('afterprint', function() {
+  // Restore responsive charts after print
+  setTimeout(function(){ drawChart(); drawAideChart(); }, 100);
+});
+
+// Boot
+document.addEventListener('DOMContentLoaded', render);
+</script>
+</body>
+</html>
