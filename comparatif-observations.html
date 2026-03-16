@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analyse Comparative — Outil d'Observation</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=DM+Mono:wght@400;500&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #f0f2f7;
+  --surface:  #ffffff;
+  --surface2: #f7f8fc;
+  --border:   #e4e7f0;
+  --text:     #1a1d2e;
+  --muted:    #6b7280;
+  --blue:     #2563eb;
+  --blue-light:#eff6ff;
+  --green:    #16a34a;
+  --amber:    #d97706;
+  --red:      #dc2626;
+  --purple:   #7c3aed;
+  --radius:   0.75rem;
+}
+
+body {
+  font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+/* ── Header ── */
+.app-header {
+  background: var(--text);
+  color: #fff;
+  padding: 1.25rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+}
+.app-header h1 {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.app-header p { font-size: 0.75rem; color: #94a3b8; }
+.header-badge {
+  margin-left: auto;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 2rem;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.05em;
+}
+
+/* ── Layout ── */
+.container { max-width: 72rem; margin: 0 auto; padding: 2rem 1.5rem; }
+
+/* ── Upload zone ── */
+.upload-area {
+  background: var(--surface);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 3rem 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+.upload-area:hover, .upload-area.drag-over {
+  border-color: var(--blue);
+  background: var(--blue-light);
+}
+.upload-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.upload-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+.upload-area h2 { font-size: 1.125rem; font-weight: 700; margin-bottom: 0.4rem; }
+.upload-area p { font-size: 0.85rem; color: var(--muted); }
+
+/* ── Observer chips ── */
+.observers-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+}
+.obs-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 2rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+}
+.obs-chip-remove {
+  width: 16px; height: 16px;
+  background: rgba(255,255,255,0.25);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #fff;
+  font-size: 0.7rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.obs-chip-remove:hover { background: rgba(255,255,255,0.45); }
+
+/* ── CTA ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.65rem 1.35rem; border-radius: 0.5rem;
+  font-weight: 600; font-size: 0.875rem;
+  cursor: pointer; border: none; outline: none;
+  transition: all 0.18s ease;
+  font-family: inherit;
+}
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-primary { background: var(--blue); color: #fff; box-shadow: 0 2px 8px rgba(37,99,235,0.25); }
+.btn-primary:hover:not(:disabled) { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(37,99,235,0.35); }
+.btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+.btn-ghost:hover:not(:disabled) { background: var(--surface2); }
+.btn-ai { background: linear-gradient(135deg, #7c3aed, #4f46e5); color: #fff; box-shadow: 0 2px 8px rgba(124,58,237,0.3); }
+.btn-ai:hover:not(:disabled) { box-shadow: 0 6px 18px rgba(124,58,237,0.4); transform: translateY(-1px); }
+
+/* ── Section title ── */
+.section-title {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── Card ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.card-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+  display: flex; align-items: center; gap: 0.6rem;
+  font-weight: 700; font-size: 0.875rem;
+}
+.card-body { padding: 1.5rem; }
+
+/* ── Grid ── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+
+/* ── Radar ── */
+.radar-wrap { height: 360px; position: relative; }
+
+/* ── Domain table ── */
+.domain-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.domain-table th {
+  padding: 0.6rem 1rem;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+.domain-table td { padding: 0.7rem 1rem; border-bottom: 1px solid #f1f3f9; vertical-align: middle; }
+.domain-table tr:last-child td { border-bottom: none; }
+.domain-table tr:hover td { background: var(--surface2); }
+
+.score-pill {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 2rem; height: 2rem;
+  border-radius: 50%;
+  font-size: 0.75rem; font-weight: 800;
+  font-family: 'DM Mono', monospace;
+}
+.pill-0 { background: #f1f5f9; color: #64748b; }
+.pill-1 { background: #fee2e2; color: #b91c1c; }
+.pill-2 { background: #fed7aa; color: #9a3412; }
+.pill-3 { background: #fef9c3; color: #854d0e; }
+.pill-4 { background: #dcfce7; color: #15803d; }
+.pill-avg { background: #dbeafe; color: #1d4ed8; }
+
+.ecart-badge {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  padding: 0.2rem 0.55rem; border-radius: 2rem;
+  font-size: 0.68rem; font-weight: 700; font-family: 'DM Mono', monospace;
+}
+.ecart-ok     { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+.ecart-warn   { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+.ecart-danger { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+
+/* ── Divergence items ── */
+.diverg-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.diverg-item {
+  border: 1px solid var(--border);
+  border-left: 4px solid;
+  border-radius: 0 0.5rem 0.5rem 0;
+  padding: 0.85rem 1rem;
+  background: var(--surface);
+}
+.diverg-item.high  { border-left-color: var(--red); }
+.diverg-item.med   { border-left-color: var(--amber); }
+.diverg-item-title { font-weight: 700; font-size: 0.85rem; margin-bottom: 0.4rem; }
+.diverg-item-domain { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 0.5rem; }
+.diverg-scores { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.diverg-score-tag {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  padding: 0.2rem 0.6rem; border-radius: 2rem;
+  font-size: 0.72rem; font-weight: 600;
+  color: #fff;
+}
+
+/* ── AI synthesis ── */
+.ai-output {
+  background: linear-gradient(135deg, #faf5ff, #eff6ff);
+  border: 1px solid #e9d5ff;
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  font-size: 0.875rem;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  color: #1e1b4b;
+}
+.ai-output h3 { font-size: 0.9rem; font-weight: 800; color: #6d28d9; margin: 1.25rem 0 0.4rem; }
+.ai-output h3:first-child { margin-top: 0; }
+
+/* ── Loading spinner ── */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin 0.8s linear infinite; display: inline-block; }
+
+/* ── Empty state ── */
+.empty-state {
+  text-align: center; padding: 3rem 1rem; color: var(--muted);
+}
+.empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+.empty-state p { font-size: 0.875rem; }
+
+/* ── Alert ── */
+.alert { padding: 0.85rem 1rem; border-radius: 0.5rem; font-size: 0.85rem; margin-bottom: 1rem; display: flex; align-items: flex-start; gap: 0.5rem; }
+.alert-blue { background: var(--blue-light); color: #1d4ed8; border: 1px solid #bfdbfe; }
+.alert-red  { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+
+/* ── Progress bar ── */
+.prog-track { background: #e2e8f0; border-radius: 9999px; overflow: hidden; height: 6px; }
+.prog-fill  { height: 100%; border-radius: 9999px; transition: width 0.4s; }
+
+/* ── Stats row ── */
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+.stat-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.25rem;
+  text-align: center;
+}
+.stat-box .stat-val { font-size: 2rem; font-weight: 800; font-family: 'DM Mono', monospace; line-height: 1; margin-bottom: 0.3rem; }
+.stat-box .stat-lbl { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
+
+/* ── Consensus bar ── */
+.consensus-row { display: flex; align-items: center; gap: 0.75rem; font-size: 0.8rem; margin-bottom: 0.5rem; }
+.consensus-label { width: 9rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.consensus-bar-wrap { flex: 1; }
+
+/* ── Print ── */
+@media print {
+  .no-print { display: none !important; }
+  body { background: white; }
+  .card { box-shadow: none; break-inside: avoid; }
+  .app-header { position: static; }
+}
+
+@media (max-width: 768px) {
+  .grid-2, .grid-3, .stats-row { grid-template-columns: 1fr; }
+  .container { padding: 1rem; }
+}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div>
+    <h1>📊 Analyse Comparative Multi-Observateurs</h1>
+    <p>Croisement des regards professionnels — Outil d'Observation FWB</p>
+  </div>
+  <span class="header-badge" id="obs-count-badge">0 fichier chargé</span>
+</header>
+
+<div class="container" id="app"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+'use strict';
+
+// ── DOMAINS (identique à l'outil principal) ──────────────────────────────────
+var DOMAINS = [
+  { id:'D1',  title:"Accès physique",         short:"Accès physique",    items:['d1_1','d1_2','d1_3','d1_4','d1_5','d1_6','d1_7','d1_8'] },
+  { id:'D2',  title:"Autonomie scolaire",      short:"Autonomie",         items:['d2_1','d2_2','d2_3','d2_4','d2_5','d2_6','d2_7','d2_8','d2_9'] },
+  { id:'D3',  title:"Capacités exécutives",    short:"Exécutif",          items:['d3_1','d3_2','d3_3','d3_4','d3_5','d3_6','d3_7','d3_8'] },
+  { id:'D4',  title:"Capacités pédagogiques",  short:"Pédagogie",         items:['d4_1','d4_2','d4_3','d4_4','d4_5','d4_6','d4_7','d4_8','d4_9'] },
+  { id:'D5',  title:"Participation en classe", short:"Participation",     items:['d5_1','d5_2','d5_3','d5_4','d5_5','d5_6'] },
+  { id:'D6',  title:"Relations sociales",      short:"Social",            items:['d6_1','d6_2','d6_3','d6_4','d6_5','d6_6','d6_7'] },
+  { id:'D7',  title:"Gestion émotionnelle",    short:"Émotions",          items:['d7_1','d7_2','d7_3','d7_4','d7_5','d7_6'] },
+  { id:'D8',  title:"Fatigue & handicap",      short:"Fatigue",           items:['d8_1','d8_2','d8_3','d8_4','d8_5'] },
+  { id:'D9',  title:"Collaboration & réseau",  short:"Réseau",            items:['d9_1','d9_2','d9_3','d9_4','d9_5'] },
+  { id:'D10', title:"Utilisation aménagements",short:"Aménagements",      items:['d10_1','d10_2','d10_3','d10_4','d10_5'] }
+];
+
+var ITEM_LABELS = {
+  d1_1:"Accès autonome bâtiments",d1_2:"Circulation école",d1_3:"Sanitaires adaptés",d1_4:"Classes spécialisées",d1_5:"Installation ergonomique",d1_6:"Accès matériel",d1_7:"Activités physiques",d1_8:"Fatigabilité déplacements",
+  d2_1:"Gestion matériel",d2_2:"Organisation cartable",d2_3:"Installation cours",d2_4:"Prise de notes",d2_5:"Outils compensatoires",d2_6:"Gestion du temps",d2_7:"Demander de l'aide",d2_8:"Déplacements internes",d2_9:"Pauses et transitions",
+  d3_1:"Maintien attention",d3_2:"Suivre consignes",d3_3:"Gestion impulsivité",d3_4:"Persévérance tâche",d3_5:"Capacité planifier",d3_6:"Organisation étapes",d3_7:"Flexibilité cognitive",d3_8:"Gestion distractions",
+  d4_1:"Compréhension consignes",d4_2:"Compréhension orale",d4_3:"Lecture",d4_4:"Production écrite",d4_5:"Raisonnement logique",d4_6:"Mathématiques",d4_7:"Mémorisation",d4_8:"Transfert apprentissages",d4_9:"Vitesse exécution",
+  d5_1:"Participation orale",d5_2:"Prise d'initiative",d5_3:"Interaction enseignant",d5_4:"Engagement activités",d5_5:"Travaux de groupe",d5_6:"Terminer tâches",
+  d6_1:"Relations pairs",d6_2:"Acceptation groupe",d6_3:"Initiation sociale",d6_4:"Réactions conflits",d6_5:"Moments informels",d6_6:"Risque isolement",d6_7:"Regard des autres",
+  d7_1:"Tolérance frustration",d7_2:"Gestion stress",d7_3:"Confiance en soi",d7_4:"Motivation scolaire",d7_5:"Persévérance difficultés",d7_6:"Expression émotions",
+  d8_1:"Fatigue physique",d8_2:"Fatigue cognitive",d8_3:"Rythme scolaire",d8_4:"Besoin pauses",d8_5:"Impact soins/thérapies",
+  d9_1:"Communication parents",d9_2:"Communication thérapeutes",d9_3:"Coordination pôle",d9_4:"Mise en place aménagements",d9_5:"Compréhension handicap équipe",
+  d10_1:"Outils numériques",d10_2:"Aménagements pédagogiques",d10_3:"Adaptations évaluation",d10_4:"Adaptation matériel",d10_5:"Adaptation tâches"
+};
+
+// Palette couleurs pour les observateurs
+var COLORS = [
+  { solid:'#2563eb', alpha:'rgba(37,99,235,0.18)'  },
+  { solid:'#16a34a', alpha:'rgba(22,163,74,0.18)'  },
+  { solid:'#dc2626', alpha:'rgba(220,38,38,0.18)'  },
+  { solid:'#d97706', alpha:'rgba(217,119,6,0.18)'  },
+  { solid:'#7c3aed', alpha:'rgba(124,58,237,0.18)' },
+  { solid:'#0891b2', alpha:'rgba(8,145,178,0.18)'  },
+  { solid:'#be185d', alpha:'rgba(190,24,93,0.18)'  },
+  { solid:'#65a30d', alpha:'rgba(101,163,13,0.18)' }
+];
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+var observers = []; // [{label, profile, level, code, responses}]
+var radarChart = null;
+var aiLoading  = false;
+var aiResult   = '';
+var errorMsg   = '';
+
+// ── CALCUL ───────────────────────────────────────────────────────────────────
+function calcDomainScore(responses, domainItems) {
+  var total = 0, count = 0;
+  domainItems.forEach(function(id) {
+    if (responses[id] && responses[id].score !== undefined && responses[id].score !== null) {
+      total += responses[id].score;
+      count++;
+    }
+  });
+  if (count === 0) return null;
+  return Math.round((total / (count * 4)) * 100);
+}
+
+function calcAllDomains(obs) {
+  return DOMAINS.map(function(d) {
+    return calcDomainScore(obs.responses, d.items);
+  });
+}
+
+function getDivergences() {
+  if (observers.length < 2) return [];
+  var diverg = [];
+  DOMAINS.forEach(function(domain) {
+    domain.items.forEach(function(itemId) {
+      var scores = observers.map(function(obs) {
+        var r = obs.responses[itemId];
+        return (r && r.score !== undefined) ? r.score : null;
+      }).filter(function(s){ return s !== null; });
+      if (scores.length < 2) return;
+      var min = Math.min.apply(null, scores);
+      var max = Math.max.apply(null, scores);
+      var ecart = max - min;
+      if (ecart >= 2) {
+        diverg.push({
+          itemId: itemId,
+          label: ITEM_LABELS[itemId] || itemId,
+          domain: domain.title,
+          ecart: ecart,
+          scores: observers.map(function(obs, i) {
+            var r = obs.responses[itemId];
+            return { label: obs.label, score: (r && r.score !== undefined) ? r.score : null, color: COLORS[i % COLORS.length].solid };
+          })
+        });
+      }
+    });
+  });
+  diverg.sort(function(a,b){ return b.ecart - a.ecart; });
+  return diverg;
+}
+
+// ── RENDER ───────────────────────────────────────────────────────────────────
+function render() {
+  document.getElementById('app').innerHTML = '';
+  var root = document.getElementById('app');
+
+  // Badge header
+  var n = observers.length;
+  document.getElementById('obs-count-badge').textContent =
+    n === 0 ? '0 fichier chargé' : n + ' observateur' + (n > 1 ? 's' : '') + ' chargé' + (n > 1 ? 's' : '');
+
+  // ── Zone de chargement
+  var uploadSection = document.createElement('div');
+  uploadSection.style.marginBottom = '2rem';
+
+  var uploadArea = document.createElement('div');
+  uploadArea.className = 'upload-area no-print';
+  uploadArea.innerHTML = '<div class="upload-icon">📂</div><h2>Charger des fichiers d\'observation (.json)</h2><p>Glissez-déposez plusieurs fichiers ou cliquez pour sélectionner — chaque fichier = un observateur</p>';
+  var fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = '.json';
+  fileInput.multiple = true;
+  fileInput.addEventListener('change', function(e){ loadFiles(e.target.files); });
+  uploadArea.appendChild(fileInput);
+
+  // Drag & drop
+  uploadArea.addEventListener('dragover', function(e){ e.preventDefault(); uploadArea.classList.add('drag-over'); });
+  uploadArea.addEventListener('dragleave', function(){ uploadArea.classList.remove('drag-over'); });
+  uploadArea.addEventListener('drop', function(e){
+    e.preventDefault(); uploadArea.classList.remove('drag-over');
+    loadFiles(e.dataTransfer.files);
+  });
+  uploadSection.appendChild(uploadArea);
+
+  // Chips observateurs
+  if (observers.length > 0) {
+    var bar = document.createElement('div');
+    bar.className = 'observers-bar';
+    observers.forEach(function(obs, i) {
+      var chip = document.createElement('span');
+      chip.className = 'obs-chip';
+      chip.style.background = COLORS[i % COLORS.length].solid;
+      chip.innerHTML = obs.label;
+      var rm = document.createElement('button');
+      rm.className = 'obs-chip-remove';
+      rm.innerHTML = '✕';
+      rm.title = 'Retirer';
+      rm.addEventListener('click', (function(idx){ return function(){ observers.splice(idx,1); render(); }; })(i));
+      chip.appendChild(rm);
+      bar.appendChild(chip);
+    });
+    uploadSection.appendChild(bar);
+  }
+
+  root.appendChild(uploadSection);
+
+  // Erreur
+  if (errorMsg) {
+    var err = document.createElement('div');
+    err.className = 'alert alert-red no-print';
+    err.textContent = errorMsg;
+    root.appendChild(err);
+  }
+
+  // ── Si pas assez d'observateurs
+  if (observers.length < 2) {
+    var empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.innerHTML = observers.length === 0
+      ? '<div class="empty-icon">👆</div><p>Chargez au moins <strong>2 fichiers .json</strong> pour lancer l\'analyse comparative.</p>'
+      : '<div class="empty-icon">➕</div><p>Ajoutez au moins <strong>un second fichier</strong> pour comparer les observations.</p>';
+    root.appendChild(empty);
+    return;
+  }
+
+  // ── Statistiques globales
+  renderStats(root);
+
+  // ── Radar + tableau
+  var radarTitle = document.createElement('p');
+  radarTitle.className = 'section-title';
+  radarTitle.textContent = 'Profils comparatifs par domaine';
+  root.appendChild(radarTitle);
+
+  var grid2 = document.createElement('div');
+  grid2.className = 'grid-2';
+  grid2.style.marginBottom = '2rem';
+
+  // Radar
+  var radarCard = document.createElement('div');
+  radarCard.className = 'card';
+  radarCard.innerHTML = '<div class="card-header">🕸️ Radar superposé</div>';
+  var radarBody = document.createElement('div');
+  radarBody.className = 'card-body';
+  var radarWrap = document.createElement('div');
+  radarWrap.className = 'radar-wrap';
+  var canvas = document.createElement('canvas');
+  canvas.id = 'radar-canvas';
+  radarWrap.appendChild(canvas);
+  radarBody.appendChild(radarWrap);
+  radarCard.appendChild(radarBody);
+  grid2.appendChild(radarCard);
+
+  // Tableau domaines
+  var tableCard = document.createElement('div');
+  tableCard.className = 'card';
+  tableCard.innerHTML = '<div class="card-header">📋 Scores par domaine</div>';
+  var tableBody = document.createElement('div');
+  tableBody.style.overflowX = 'auto';
+  var table = buildDomainTable();
+  tableBody.appendChild(table);
+  tableCard.appendChild(tableBody);
+  grid2.appendChild(tableCard);
+
+  root.appendChild(grid2);
+
+  // ── Divergences
+  var divTitle = document.createElement('p');
+  divTitle.className = 'section-title';
+  divTitle.textContent = 'Items à forte divergence (écart ≥ 2 points)';
+  root.appendChild(divTitle);
+
+  renderDivergences(root);
+
+  // ── Synthèse IA
+  var aiTitle = document.createElement('p');
+  aiTitle.className = 'section-title';
+  aiTitle.style.marginTop = '2rem';
+  aiTitle.textContent = 'Synthèse IA des convergences & divergences';
+  root.appendChild(aiTitle);
+
+  renderAI(root);
+
+  // Draw chart after DOM is ready
+  setTimeout(drawRadar, 50);
+}
+
+// ── Stats globales ────────────────────────────────────────────────────────────
+function renderStats(root) {
+  var diverg = getDivergences();
+  var allScores = [];
+  observers.forEach(function(obs) {
+    DOMAINS.forEach(function(d) {
+      d.items.forEach(function(id) {
+        var r = obs.responses[id];
+        if (r && r.score !== undefined) allScores.push(r.score);
+      });
+    });
+  });
+  var avg = allScores.length ? (allScores.reduce(function(a,b){return a+b;},0)/allScores.length/4*100).toFixed(0) : '—';
+
+  // Consensus score = items with ecart 0 / total comparable
+  var consensusCount = 0, comparableCount = 0;
+  DOMAINS.forEach(function(d){
+    d.items.forEach(function(id){
+      var sc = observers.map(function(o){ var r=o.responses[id]; return (r&&r.score!==undefined)?r.score:null; }).filter(function(s){return s!==null;});
+      if (sc.length >= 2) { comparableCount++; if (Math.max.apply(null,sc)-Math.min.apply(null,sc) === 0) consensusCount++; }
+    });
+  });
+  var consensusPct = comparableCount ? Math.round(consensusCount/comparableCount*100) : 0;
+
+  var statsTitle = document.createElement('p');
+  statsTitle.className = 'section-title';
+  statsTitle.textContent = 'Vue d\'ensemble';
+  root.appendChild(statsTitle);
+
+  var row = document.createElement('div');
+  row.className = 'stats-row';
+  row.style.marginBottom = '2rem';
+
+  function statBox(val, lbl, color) {
+    var b = document.createElement('div');
+    b.className = 'stat-box';
+    b.innerHTML = '<div class="stat-val" style="color:'+color+'">'+val+'</div><div class="stat-lbl">'+lbl+'</div>';
+    return b;
+  }
+
+  row.appendChild(statBox(observers.length, 'Observateurs', '#2563eb'));
+  row.appendChild(statBox(avg+'%', 'Score moyen global', '#16a34a'));
+  row.appendChild(statBox(diverg.length, 'Items divergents', diverg.length > 5 ? '#dc2626' : '#d97706'));
+  row.appendChild(statBox(consensusPct+'%', 'Taux de consensus', consensusPct >= 70 ? '#16a34a' : '#d97706'));
+
+  root.appendChild(row);
+}
+
+// ── Tableau domaines ─────────────────────────────────────────────────────────
+function buildDomainTable() {
+  var table = document.createElement('table');
+  table.className = 'domain-table';
+
+  var thead = document.createElement('thead');
+  var hrow = document.createElement('tr');
+  var thDom = document.createElement('th');
+  thDom.textContent = 'Domaine';
+  hrow.appendChild(thDom);
+
+  observers.forEach(function(obs, i) {
+    var th = document.createElement('th');
+    th.innerHTML = '<span style="color:'+COLORS[i%COLORS.length].solid+'">●</span> ' + obs.label;
+    hrow.appendChild(th);
+  });
+
+  var thMoy = document.createElement('th');
+  thMoy.textContent = 'Moy.';
+  hrow.appendChild(thMoy);
+
+  var thEcart = document.createElement('th');
+  thEcart.textContent = 'Écart';
+  hrow.appendChild(thEcart);
+
+  thead.appendChild(hrow);
+  table.appendChild(thead);
+
+  var tbody = document.createElement('tbody');
+
+  DOMAINS.forEach(function(domain) {
+    var tr = document.createElement('tr');
+
+    var tdName = document.createElement('td');
+    tdName.style.fontWeight = '600';
+    tdName.style.fontSize = '0.8rem';
+    tdName.textContent = domain.short;
+    tr.appendChild(tdName);
+
+    var scores = [];
+    observers.forEach(function(obs, i) {
+      var pct = calcDomainScore(obs.responses, domain.items);
+      scores.push(pct);
+      var td = document.createElement('td');
+      if (pct !== null) {
+        var pillClass = pct >= 75 ? 'pill-4' : pct >= 50 ? 'pill-3' : pct >= 25 ? 'pill-2' : 'pill-1';
+        td.innerHTML = '<div class="score-pill '+pillClass+'">'+pct+'</div>';
+      } else {
+        td.innerHTML = '<div class="score-pill pill-0">—</div>';
+      }
+      tr.appendChild(td);
+    });
+
+    var validScores = scores.filter(function(s){ return s !== null; });
+    var moy = validScores.length ? Math.round(validScores.reduce(function(a,b){return a+b;},0)/validScores.length) : null;
+    var ecart = validScores.length >= 2 ? Math.max.apply(null,validScores) - Math.min.apply(null,validScores) : null;
+
+    var tdMoy = document.createElement('td');
+    tdMoy.innerHTML = moy !== null ? '<div class="score-pill pill-avg">'+moy+'</div>' : '<div class="score-pill pill-0">—</div>';
+    tr.appendChild(tdMoy);
+
+    var tdEcart = document.createElement('td');
+    if (ecart !== null) {
+      var cls = ecart <= 10 ? 'ecart-ok' : ecart <= 25 ? 'ecart-warn' : 'ecart-danger';
+      var sym = ecart <= 10 ? '✓' : ecart <= 25 ? '⚠' : '⚡';
+      tdEcart.innerHTML = '<span class="ecart-badge '+cls+'">'+sym+' '+ecart+'pt</span>';
+    }
+    tr.appendChild(tdEcart);
+
+    tbody.appendChild(tr);
+  });
+
+  table.appendChild(tbody);
+  return table;
+}
+
+// ── Divergences ──────────────────────────────────────────────────────────────
+function renderDivergences(root) {
+  var diverg = getDivergences();
+  var card = document.createElement('div');
+  card.className = 'card';
+  card.style.marginBottom = '2rem';
+
+  var hdr = document.createElement('div');
+  hdr.className = 'card-header';
+  hdr.innerHTML = '⚡ Items divergents <span style="margin-left:auto;font-size:0.75rem;color:#6b7280;font-weight:400">'+diverg.length+' item'+(diverg.length>1?'s':'')+' avec écart ≥ 2 pts</span>';
+  card.appendChild(hdr);
+
+  var body = document.createElement('div');
+  body.className = 'card-body';
+
+  if (diverg.length === 0) {
+    body.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div><p>Aucune divergence majeure — fort consensus entre les observateurs.</p></div>';
+  } else {
+    var list = document.createElement('div');
+    list.className = 'diverg-list';
+    diverg.slice(0, 20).forEach(function(d) {
+      var item = document.createElement('div');
+      item.className = 'diverg-item ' + (d.ecart >= 3 ? 'high' : 'med');
+      var domSpan = document.createElement('div');
+      domSpan.className = 'diverg-item-domain';
+      domSpan.textContent = d.domain;
+      var titleDiv = document.createElement('div');
+      titleDiv.className = 'diverg-item-title';
+      titleDiv.textContent = d.label;
+      var scoresDiv = document.createElement('div');
+      scoresDiv.className = 'diverg-scores';
+      d.scores.forEach(function(s) {
+        if (s.score === null) return;
+        var tag = document.createElement('span');
+        tag.className = 'diverg-score-tag';
+        tag.style.background = s.color;
+        var scoreLabels = ['Non obs.','Diff. imp.','Diff. mod.','Satisf.','Force'];
+        tag.textContent = s.label + ' : ' + s.score + '/4 — ' + (scoreLabels[s.score] || '');
+        scoresDiv.appendChild(tag);
+      });
+      item.appendChild(domSpan);
+      item.appendChild(titleDiv);
+      item.appendChild(scoresDiv);
+      list.appendChild(item);
+    });
+    body.appendChild(list);
+  }
+
+  card.appendChild(body);
+  root.appendChild(card);
+}
+
+// ── Synthèse IA ──────────────────────────────────────────────────────────────
+function renderAI(root) {
+  var card = document.createElement('div');
+  card.className = 'card';
+  card.style.marginBottom = '2rem';
+
+  var hdr = document.createElement('div');
+  hdr.className = 'card-header';
+  hdr.innerHTML = '🤖 Synthèse IA narrative';
+  card.appendChild(hdr);
+
+  var body = document.createElement('div');
+  body.className = 'card-body';
+
+  if (!aiResult && !aiLoading) {
+    var info = document.createElement('div');
+    info.className = 'alert alert-blue';
+    info.style.marginBottom = '1rem';
+    info.innerHTML = 'ℹ️ Claude va analyser les convergences, divergences et formuler des recommandations basées sur les ' + observers.length + ' observations.';
+    body.appendChild(info);
+
+    var btn = document.createElement('button');
+    btn.className = 'btn btn-ai no-print';
+    btn.innerHTML = '✨ Générer la synthèse comparative';
+    btn.addEventListener('click', generateAI);
+    body.appendChild(btn);
+  } else if (aiLoading) {
+    var loading = document.createElement('div');
+    loading.style.textAlign = 'center';
+    loading.style.padding = '2rem';
+    loading.style.color = '#7c3aed';
+    loading.innerHTML = '<span class="spin" style="font-size:1.5rem">⟳</span><p style="margin-top:0.75rem;font-size:0.875rem">Analyse en cours...</p>';
+    body.appendChild(loading);
+  } else {
+    var output = document.createElement('div');
+    output.className = 'ai-output';
+    // Format headings
+    var formatted = aiResult.replace(/^##\s(.+)$/gm, '<h3>$1</h3>').replace(/^###\s(.+)$/gm, '<h3>$1</h3>');
+    output.innerHTML = formatted;
+    body.appendChild(output);
+
+    var resetBtn = document.createElement('button');
+    resetBtn.className = 'btn btn-ghost no-print';
+    resetBtn.style.marginTop = '1rem';
+    resetBtn.textContent = '↺ Regénérer';
+    resetBtn.addEventListener('click', function(){ aiResult = ''; render(); });
+    body.appendChild(resetBtn);
+  }
+
+  card.appendChild(body);
+  root.appendChild(card);
+}
+
+// ── Radar ────────────────────────────────────────────────────────────────────
+function drawRadar() {
+  var el = document.getElementById('radar-canvas');
+  if (!el || typeof Chart === 'undefined') return;
+  if (radarChart) { radarChart.destroy(); radarChart = null; }
+
+  var labels = DOMAINS.map(function(d){ return d.short; });
+  var datasets = observers.map(function(obs, i) {
+    var c = COLORS[i % COLORS.length];
+    var scores = DOMAINS.map(function(d){ return calcDomainScore(obs.responses, d.items) || 0; });
+    return {
+      label: obs.label,
+      data: scores,
+      backgroundColor: c.alpha,
+      borderColor: c.solid,
+      borderWidth: 2,
+      pointBackgroundColor: c.solid,
+      pointRadius: 3
+    };
+  });
+
+  radarChart = new Chart(el.getContext('2d'), {
+    type: 'radar',
+    data: { labels: labels, datasets: datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: { r: { min: 0, max: 100, ticks: { display: false, stepSize: 25 }, pointLabels: { font: { size: 10, weight: '700', family: 'DM Sans' } }, grid: { color: 'rgba(0,0,0,0.07)' } } },
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 11, family: 'DM Sans', weight: '600' }, padding: 12, usePointStyle: true, pointStyleWidth: 8 } },
+        tooltip: { callbacks: { label: function(ctx){ return ' ' + ctx.dataset.label + ' : ' + ctx.raw + '%'; } } }
+      }
+    }
+  });
+}
+
+// ── Chargement fichiers ───────────────────────────────────────────────────────
+function loadFiles(files) {
+  errorMsg = '';
+  var pending = files.length;
+  if (!pending) return;
+
+  Array.from(files).forEach(function(file) {
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        var data = JSON.parse(ev.target.result);
+        if (!data || !data.info || !data.responses) throw new Error('Format invalide');
+        var profile = data.info.profile || 'Inconnu';
+        var code    = data.info.code    || '—';
+        var label   = profile + (code !== '—' ? ' (' + code + ')' : '');
+        // Éviter les doublons exacts
+        var exists = observers.some(function(o){ return o.label === label; });
+        if (!exists) {
+          observers.push({ label: label, profile: profile, code: code, level: data.info.level || '—', responses: data.responses, info: data.info });
+        }
+      } catch(e) {
+        errorMsg = 'Erreur fichier "' + file.name + '" : ' + e.message;
+      }
+      pending--;
+      if (pending === 0) render();
+    };
+    reader.onerror = function(){ errorMsg = 'Impossible de lire ' + file.name; pending--; if (!pending) render(); };
+    reader.readAsText(file);
+  });
+}
+
+// ── Génération IA ─────────────────────────────────────────────────────────────
+function generateAI() {
+  aiLoading = true;
+  aiResult  = '';
+  render();
+
+  // Construction du contexte
+  var ctx = '=== ANALYSE COMPARATIVE MULTI-OBSERVATEURS ===\n\n';
+  ctx += 'Nombre d\'observateurs : ' + observers.length + '\n';
+  ctx += 'Profils : ' + observers.map(function(o){ return o.profile + ' (dossier ' + o.code + ')'; }).join(', ') + '\n\n';
+
+  // Scores par domaine
+  ctx += '--- SCORES PAR DOMAINE (en %) ---\n';
+  DOMAINS.forEach(function(domain) {
+    ctx += domain.title + ' :\n';
+    observers.forEach(function(obs, i) {
+      var s = calcDomainScore(obs.responses, domain.items);
+      ctx += '  • ' + obs.label + ' : ' + (s !== null ? s + '%' : 'non renseigné') + '\n';
+    });
+  });
+
+  // Divergences
+  var diverg = getDivergences();
+  if (diverg.length > 0) {
+    ctx += '\n--- DIVERGENCES MAJEURES (écart ≥ 2 pts) ---\n';
+    diverg.slice(0, 15).forEach(function(d) {
+      ctx += '• ' + d.label + ' [' + d.domain + '] — écart de ' + d.ecart + ' pts\n';
+      d.scores.forEach(function(s){ if (s.score !== null) ctx += '    ' + s.label + ' : ' + s.score + '/4\n'; });
+    });
+  }
+
+  var prompt = 'Tu es un expert en inclusion scolaire et en handicap (contexte FWB belge). Voici les données d\'observation d\'un même élève par ' + observers.length + ' professionnels différents.\n\nRédige une synthèse comparative professionnelle en français (400-600 mots) structurée ainsi :\n\n## Points de convergence\nIdentifie les domaines où les observateurs s\'accordent (écarts faibles) et ce que cela révèle.\n\n## Points de divergence\nAnalyse les items où les regards diffèrent fortement. Propose des hypothèses explicatives (contexte d\'observation, moment de la journée, relation élève-adulte, etc.).\n\n## Ce que cela révèle du profil de l\'élève\nSynthèse clinique intégrant la variabilité des observations comme donnée en soi.\n\n## Recommandations pour l\'équipe\nPropose 3-4 recommandations concrètes pour harmoniser les regards et ajuster les interventions.\n\nAdopte un ton neutre, professionnel et bienveillant.\n\n' + ctx;
+
+  fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data) {
+    if (data.content && data.content[0] && data.content[0].text) {
+      aiResult = data.content[0].text;
+    } else if (data.error) {
+      aiResult = '⚠️ Erreur API : ' + (data.error.message || JSON.stringify(data.error));
+    } else {
+      aiResult = '⚠️ Réponse inattendue.';
+    }
+    aiLoading = false;
+    render();
+  })
+  .catch(function(e) {
+    aiResult  = '⚠️ Erreur réseau : ' + e.message;
+    aiLoading = false;
+    render();
+  });
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>
