@@ -744,10 +744,19 @@ function renderWelcome(root) {
   demoBtn.style.borderColor = '#c4b5fd';
   demoBtn.style.color = '#7c3aed';
 
+  // Bouton comparateur
+  var comparBtn = h('a', {
+    href: 'comparatif-observations.html',
+    className: 'btn btn-outline btn-lg',
+    style: { flex:'1', textDecoration:'none', justifyContent:'center', borderColor:'#818cf8', color:'#4f46e5' }
+  }, [hIcon('BarChart3', 18), '  Comparateur d’observations']);
+
   btnRow.appendChild(startBtn);
   btnRow.appendChild(loadLabel);
   btnRow.appendChild(demoBtn);
+  btnRow.appendChild(comparBtn);
   wrap.appendChild(btnRow);
+
   root.appendChild(wrap);
 }
 
