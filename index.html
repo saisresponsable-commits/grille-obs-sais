@@ -234,9 +234,9 @@
         .score-badge { width: 2rem; height: 2rem; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 900; margin: 0 auto; }
         .score-0 { background: #f1f5f9; color: #64748b; }
         .score-1 { background: #fee2e2; color: #b91c1c; }
-        .score-2 { background: #fed7aa; color: #9a3412; }
-        .score-3 { background: #fef9c3; color: #854d0e; }
-        .score-4 { background: #dcfce7; color: #15803d; }
+        .score-2 { background: #ffedd5; color: #c2410c; }
+        .score-3 { background: #dcfce7; color: #15803d; }
+        .score-4 { background: #bbf7d0; color: #166534; }
         .score-empty { background: #f1f5f9; color: #94a3b8; }
 
         /* Score buttons */
@@ -336,7 +336,8 @@ var SVG_ICONS = {
     BarChart3:    '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
     Stethoscope:  '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/></svg>',
     Brain:        '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.46 2.5 2.5 0 0 1-1.7-4.28 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.18-1.94z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.46 2.5 2.5 0 0 0 1.7-4.28 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.18-1.94z"/></svg>',
-    Home:         '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>'
+    Home:         '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>',
+    Edit3:        '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>'
 };
 function icon(name, size) {
     size = size || 20;
@@ -475,7 +476,6 @@ var state = {
   errorMsg: '',
   saveError: '',
   showConfirmReset: false,
-  showFinalizeModal: false,
   chartInstance: null,
   currentDraftId: null
 };
@@ -791,10 +791,10 @@ function callGemini(prompt, sysInstruction, onSuccess, onError) {
 }
 
 // ─── SAVE / LOAD ──────────────────────────────────────────────────────────────
-function buildProjectPayload(finalized) {
+function buildProjectPayload() {
   return {
     type:'sais-observation',
-    version:2.4,
+    version:2.41,
     info:state.info,
     responses:state.responses,
     aiSynthesis:state.aiSynthesis,
@@ -804,22 +804,20 @@ function buildProjectPayload(finalized) {
     completion:getCompletionStats(),
     helpDependency:getHelpDependencyStats(),
     observationDate:state.info.observationDate || null,
-    finalized:!!finalized,
-    finalizedAt:finalized ? new Date().toISOString() : null,
     timestamp:new Date().toISOString()
   };
 }
 
-function downloadProject(finalized) {
+function downloadProject() {
   try {
-    var payload = buildProjectPayload(finalized);
+    var payload = buildProjectPayload();
     var data = JSON.stringify(payload, null, 2);
     var blob = new Blob([data], { type:'application/json' });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     var obsDate = state.info.observationDate || todayLocalDate();
     a.href = url;
-    a.download = 'obs_' + (state.info.code || 'projet') + '_' + obsDate + (finalized ? '_final' : '') + '.json';
+    a.download = 'obs_' + (state.info.code || 'projet') + '_' + obsDate + '.json';
     document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     state.saveError = '';
     return true;
@@ -830,26 +828,9 @@ function downloadProject(finalized) {
 }
 
 function saveProject() {
-  var ok = downloadProject(false);
+  var ok = downloadProject();
   if (ok) saveCurrentDraft();
   render();
-}
-
-function finalizeObservation() {
-  if (!downloadProject(true)) { render(); return; }
-  deleteCurrentDraft();
-  state.responses = {};
-  state.info = emptyInfo();
-  state.aiSynthesis = '';
-  state.aiGoals = '';
-  state.errorMsg = '';
-  state.saveError = '';
-  state.domainIdx = 0;
-  state.showFinalizeModal = false;
-  state.showConfirmReset = false;
-  state.step = 'welcome';
-  render();
-  window.scrollTo(0,0);
 }
 
 function loadProject(file) {
@@ -1355,8 +1336,21 @@ function renderResults(root) {
   hdr.appendChild(hdrLeft);
 
   var btnRow = h('div', { style:{display:'flex',flexWrap:'wrap',gap:'0.75rem'} });
-  btnRow.appendChild(hBtn([hIcon('Save',16)," Sauvegarder .json"],"btn-success",saveProject));
-  btnRow.appendChild(hBtn([hIcon('CheckCircle2',16)," Finaliser l'observation"],"btn-primary",function(){ setState({showFinalizeModal:true}); }));
+  btnRow.appendChild(hBtn([hIcon('Edit3',16)," Modifier l’observation"],"btn-outline",function(){
+    var firstIncomplete = -1;
+    for (var di=0; di<DOMAINS.length; di++) {
+      var hasMissing = DOMAINS[di].items.some(function(item){
+        var r = state.responses[item.id];
+        return !r || (r.score === undefined && !r.notApplicable);
+      });
+      if (hasMissing) { firstIncomplete = di; break; }
+    }
+    state.domainIdx = firstIncomplete >= 0 ? firstIncomplete : 0;
+    setState({step:'observation'});
+    window.scrollTo(0,0);
+  }));
+
+  btnRow.appendChild(hBtn([hIcon('Save',16)," Exporter l'observation (.json)"],"btn-success",saveProject));
   btnRow.appendChild(hBtn([hIcon('Printer',16)," Imprimer / PDF"],"btn-outline",function(){ window.print(); }));
   btnRow.appendChild(hBtn([hIcon('Trash2',16)," R\u00e9initialiser"],"btn-danger",function(){ setState({showConfirmReset:true}); }));
   hdr.appendChild(btnRow);
@@ -1378,26 +1372,6 @@ function renderResults(root) {
   triGrid.appendChild(triCard('Points de vigilance',tri.vigilance,'#b45309','Aucun item coté 1–2.'));
   triGrid.appendChild(triCard('Priorités professionnelles',tri.priorities,'#c2410c','Aucun item marqué prioritaire.'));
   wrap.appendChild(triGrid);
-
-  // Finalisation modal
-  if (state.showFinalizeModal) {
-    var fOverlay = h('div', { className:'modal-overlay no-print' });
-    var fModal = h('div', { style:{background:'#fff',border:'1px solid #bfdbfe',borderRadius:'0.75rem',padding:'2rem',maxWidth:'32rem',width:'100%',boxShadow:'0 25px 50px -12px rgba(0,0,0,0.25)'} });
-    var fComp = getCompletionStats();
-    var fi = hIcon('CheckCircle2', 40); fi.style.color='#16a34a'; fi.style.margin='0 auto 1rem'; fModal.appendChild(fi);
-    fModal.appendChild(h('h3',{style:{fontSize:'1.2rem',fontWeight:'800',marginBottom:'0.5rem',textAlign:'center'}},"Finaliser cette observation ?"));
-    fModal.appendChild(h('p',{style:{color:'#475569',fontSize:'0.85rem',marginBottom:'1rem',lineHeight:'1.6',textAlign:'center'}},
-      "Un fichier JSON final sera téléchargé puis le brouillon local sera supprimé de cet appareil."));
-    var fSummary = h('div',{style:{background:fComp.unanswered?'#fff7ed':'#f0fdf4',border:'1px solid '+(fComp.unanswered?'#fed7aa':'#bbf7d0'),padding:'0.85rem',borderRadius:'0.6rem',fontSize:'0.78rem',color:'#475569',marginBottom:'1.25rem',lineHeight:'1.6'}},
-      'Complétude : '+fComp.completed+'/'+fComp.total+' ('+fComp.percent+'%). '+fComp.unanswered+' critère'+(fComp.unanswered>1?'s':'')+' sans réponse.');
-    fModal.appendChild(fSummary);
-    if (fComp.unanswered) fModal.appendChild(h('p',{style:{fontSize:'0.75rem',color:'#b45309',fontWeight:'700',marginBottom:'1rem'}},
-      "L'observation peut être finalisée malgré les critères sans réponse ; ils resteront identifiés comme tels dans le fichier."));
-    var fBtns=h('div',{style:{display:'flex',gap:'0.75rem',justifyContent:'center',flexWrap:'wrap'}});
-    fBtns.appendChild(hBtn("Annuler","btn-outline",function(){ setState({showFinalizeModal:false}); }));
-    fBtns.appendChild(hBtn([hIcon('Save',16)," Exporter et finaliser"],"btn-success",finalizeObservation));
-    fModal.appendChild(fBtns); fOverlay.appendChild(fModal); wrap.appendChild(fOverlay);
-  }
 
   // Reset modal
   if (state.showConfirmReset) {
