@@ -352,7 +352,7 @@ body {
 
 <div class="container" id="app"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
 <script>
 'use strict';
 
@@ -401,15 +401,15 @@ var radarChart = null;
 var aiLoading  = false;
 var aiResult   = '';
 var errorMsg   = '';
+var analysisMode = 'cross';
+var longitudinalChart = null;
 
 // ── CALCUL ───────────────────────────────────────────────────────────────────
 function calcDomainScore(responses, domainItems) {
   var total = 0, count = 0;
   domainItems.forEach(function(id) {
-    if (responses[id] && responses[id].score !== undefined && responses[id].score !== null) {
-      total += responses[id].score;
-      count++;
-    }
+    var r=responses[id];
+    if (r && !r.notApplicable && r.score >= 1 && r.score <= 4) { total += r.score; count++; }
   });
   if (count === 0) return null;
   return Math.round((total / (count * 4)) * 100);
@@ -428,7 +428,7 @@ function getDivergences() {
     domain.items.forEach(function(itemId) {
       var scores = observers.map(function(obs) {
         var r = obs.responses[itemId];
-        return (r && r.score !== undefined) ? r.score : null;
+        return (r && !r.notApplicable && r.score >= 1 && r.score <= 4) ? r.score : null;
       }).filter(function(s){ return s !== null; });
       if (scores.length < 2) return;
       var min = Math.min.apply(null, scores);
@@ -442,7 +442,7 @@ function getDivergences() {
           ecart: ecart,
           scores: observers.map(function(obs, i) {
             var r = obs.responses[itemId];
-            return { label: obs.label, score: (r && r.score !== undefined) ? r.score : null, color: COLORS[i % COLORS.length].solid };
+            return { label: obs.label, score: (r && !r.notApplicable && r.score >= 1 && r.score <= 4) ? r.score : null, color: COLORS[i % COLORS.length].solid };
           })
         });
       }
@@ -450,6 +450,67 @@ function getDivergences() {
   });
   diverg.sort(function(a,b){ return b.ecart - a.ecart; });
   return diverg;
+}
+
+
+function parseObsDate(obs) {
+  var d=obs.observationDate || obs.timestamp;
+  if(!d) return null;
+  var dt=new Date(d); return isNaN(dt.getTime())?null:dt;
+}
+function longitudinalEligible() {
+  if(observers.length<2) return false;
+  if (!observers.every(function(o){ return o.code && o.code !== '—'; })) return false;
+  var codes=Array.from(new Set(observers.map(function(o){return o.code;})));
+  return codes.length===1 && observers.filter(function(o){return parseObsDate(o);}).length>=2;
+}
+function formatObsDate(obs) {
+  var d=parseObsDate(obs); return d?d.toLocaleDateString('fr-BE'):'date inconnue';
+}
+function orderedLongitudinal() {
+  return observers.slice().filter(function(o){return parseObsDate(o);}).sort(function(a,b){return parseObsDate(a)-parseObsDate(b);});
+}
+function renderModeSwitch(root) {
+  if(!longitudinalEligible()) return;
+  var bar=document.createElement('div');bar.className='action-bar no-print';bar.style.marginBottom='1.25rem';
+  var txt=document.createElement('div');txt.style.flex='1';txt.innerHTML='<strong>Même dossier détecté à plusieurs dates.</strong><br><span style="font-size:.78rem;color:var(--muted)">Choisissez la lecture souhaitée.</span>';bar.appendChild(txt);
+  var b1=document.createElement('button');b1.className='btn '+(analysisMode==='cross'?'btn-primary':'btn-ghost');b1.textContent='👥 Regards croisés';b1.onclick=function(){analysisMode='cross';render();};bar.appendChild(b1);
+  var b2=document.createElement('button');b2.className='btn '+(analysisMode==='longitudinal'?'btn-primary':'btn-ghost');b2.textContent='📈 Évolution temporelle';b2.onclick=function(){analysisMode='longitudinal';render();};bar.appendChild(b2);
+  root.appendChild(bar);
+}
+function renderLongitudinal(root) {
+  var ordered=orderedLongitudinal(); if(ordered.length<2)return;
+  var title=document.createElement('p');title.className='section-title';title.textContent='Évolution longitudinale du dossier '+ordered[0].code;root.appendChild(title);
+  var stats=document.createElement('div');stats.className='stats-row';stats.style.marginBottom='1.5rem';
+  var first=ordered[0], last=ordered[ordered.length-1];
+  var improving=0, declining=0, stable=0;
+  DOMAINS.forEach(function(d){var a=calcDomainScore(first.responses,d.items),b=calcDomainScore(last.responses,d.items);if(a===null||b===null)return;var delta=b-a;if(delta>=10)improving++;else if(delta<=-10)declining++;else stable++;});
+  [['Mesures',ordered.length],['Domaines en progrès',improving],['Stables (±9 pts)',stable],['En recul',declining]].forEach(function(x){var box=document.createElement('div');box.className='stat-box';box.innerHTML='<div class="stat-val">'+x[1]+'</div><div class="stat-lbl">'+x[0]+'</div>';stats.appendChild(box);});root.appendChild(stats);
+  var depSeries=ordered.filter(function(o){return o.helpDependency&&o.helpDependency.global!==null&&o.helpDependency.global!==undefined;});
+  if(depSeries.length>=2){
+    var dc=document.createElement('div');dc.className='card';dc.style.marginBottom='1.5rem';
+    dc.innerHTML='<div class="card-header">🧩 Évolution de la dépendance aux aides</div>';
+    var db=document.createElement('div');db.className='card-body';
+    var firstDep=depSeries[0].helpDependency.global,lastDep=depSeries[depSeries.length-1].helpDependency.global,deltaDep=lastDep-firstDep;
+    db.innerHTML='<div style="font-size:.9rem"><strong>'+firstDep+'/100</strong> → <strong>'+lastDep+'/100</strong> <span style="margin-left:.5rem;font-weight:700">'+(deltaDep>0?'+':'')+deltaDep+' pts</span></div><p style="font-size:.72rem;color:var(--muted);margin-top:.5rem">Une hausse signifie davantage de soutien/compensation requis. Indicateur interne descriptif, non validé cliniquement.</p>';
+    dc.appendChild(db);root.appendChild(dc);
+  }
+  var card=document.createElement('div');card.className='card';card.style.marginBottom='1.5rem';card.innerHTML='<div class="card-header">📈 Trajectoire par domaine</div><div class="card-body"><div style="height:420px"><canvas id="longitudinal-canvas"></canvas></div></div>';root.appendChild(card);
+  setTimeout(function(){
+    var el=document.getElementById('longitudinal-canvas');
+    if(!el)return;
+    if(typeof Chart==='undefined'){
+      el.parentElement.innerHTML='<div class="alert alert-red">Le graphique ne peut pas être affiché : Chart.js n’a pas pu être chargé. Les tableaux et analyses restent disponibles.</div>';
+      return;
+    }
+    if(longitudinalChart)longitudinalChart.destroy();
+    longitudinalChart=new Chart(el,{type:'line',data:{labels:ordered.map(formatObsDate),datasets:DOMAINS.map(function(d){return {label:d.short,data:ordered.map(function(o){return calcDomainScore(o.responses,d.items);}),tension:.2,spanGaps:true};})},options:{responsive:true,maintainAspectRatio:false,scales:{y:{min:0,max:100}},plugins:{legend:{position:'bottom'}}}});
+  },50);
+  var tableCard=document.createElement('div');tableCard.className='card';tableCard.style.marginBottom='1.5rem';tableCard.innerHTML='<div class="card-header">📋 Évolution première → dernière observation</div>';
+  var tb=document.createElement('div');tb.style.overflowX='auto';var table=document.createElement('table');table.className='domain-table';table.innerHTML='<thead><tr><th>Domaine</th><th>'+formatObsDate(first)+'</th><th>'+formatObsDate(last)+'</th><th>Évolution</th></tr></thead>';var body=document.createElement('tbody');
+  DOMAINS.forEach(function(d){var a=calcDomainScore(first.responses,d.items),b=calcDomainScore(last.responses,d.items);var tr=document.createElement('tr');var delta=(a===null||b===null)?null:b-a;tr.innerHTML='<td><strong>'+d.title+'</strong></td><td>'+(a===null?'NR':a+'%')+'</td><td>'+(b===null?'NR':b+'%')+'</td><td>'+(delta===null?'—':(delta>0?'+':'')+delta+' pts')+'</td>';body.appendChild(tr);});table.appendChild(body);tb.appendChild(table);tableCard.appendChild(tb);root.appendChild(tableCard);
+  var promptTitle=document.createElement('p');promptTitle.className='section-title';promptTitle.textContent='Prompt de synthèse longitudinale';root.appendChild(promptTitle);
+  root.appendChild(makeComparisonPromptCard('Synthèse d’évolution du dossier','Construit un prompt centré sur les changements dans le temps, en distinguant évolution réelle et variation de contexte/profil observateur.',function(){return 'Tu es un expert en suivi longitudinal de projets scolaires inclusifs. Analyse les observations successives du même dossier ci-dessous. Distingue les progrès, stabilités, fragilisations, changements de contexte et éventuels changements d’observateur. Ne conclus à une évolution que lorsque les données sont comparables. Identifie les priorités actuelles et les points à réévaluer. Structure la réponse en : 1) évolution globale, 2) progrès, 3) vigilances/reculs, 4) stabilité, 5) priorités actuelles, 6) recommandations de suivi.\n\n--- DONNÉES LONGITUDINALES ---\n'+buildComparisonPromptContext();}));
 }
 
 // ── RENDER ───────────────────────────────────────────────────────────────────
@@ -498,7 +559,7 @@ function render() {
       rm.className = 'obs-chip-remove';
       rm.innerHTML = '✕';
       rm.title = 'Retirer';
-      rm.addEventListener('click', (function(idx){ return function(){ observers.splice(idx,1); render(); }; })(i));
+      rm.addEventListener('click', (function(idx){ return function(){ observers.splice(idx,1); if(!longitudinalEligible()) analysisMode='cross'; render(); }; })(i));
       chip.appendChild(rm);
       bar.appendChild(chip);
     });
@@ -526,11 +587,18 @@ function render() {
     return;
   }
 
+  renderModeSwitch(root);
+
   // ── Statistiques globales
   renderStats(root);
 
   // ── Export / impression
   renderActionBar(root);
+
+  if (analysisMode === 'longitudinal' && longitudinalEligible()) {
+    renderLongitudinal(root);
+    return;
+  }
 
   // ── Radar + tableau
   var radarTitle = document.createElement('p');
@@ -586,15 +654,6 @@ function render() {
   root.appendChild(promptTitle);
   renderPromptGenerators(root);
 
-  // ── Synthèse IA directe (optionnelle)
-  var aiTitle = document.createElement('p');
-  aiTitle.className = 'section-title';
-  aiTitle.style.marginTop = '2rem';
-  aiTitle.textContent = 'Synthèse directe via Claude — optionnelle';
-  root.appendChild(aiTitle);
-
-  renderAI(root);
-
   // Draw chart after DOM is ready
   setTimeout(drawRadar, 50);
 }
@@ -607,7 +666,7 @@ function renderStats(root) {
     DOMAINS.forEach(function(d) {
       d.items.forEach(function(id) {
         var r = obs.responses[id];
-        if (r && r.score !== undefined) allScores.push(r.score);
+        if (r && !r.notApplicable && r.score >= 1 && r.score <= 4) allScores.push(r.score);
       });
     });
   });
@@ -617,7 +676,7 @@ function renderStats(root) {
   var consensusCount = 0, comparableCount = 0;
   DOMAINS.forEach(function(d){
     d.items.forEach(function(id){
-      var sc = observers.map(function(o){ var r=o.responses[id]; return (r&&r.score!==undefined)?r.score:null; }).filter(function(s){return s!==null;});
+      var sc = observers.map(function(o){ var r=o.responses[id]; return (r&&!r.notApplicable&&r.score>=1&&r.score<=4)?r.score:null; }).filter(function(s){return s!==null;});
       if (sc.length >= 2) { comparableCount++; if (Math.max.apply(null,sc)-Math.min.apply(null,sc) === 0) consensusCount++; }
     });
   });
@@ -639,8 +698,8 @@ function renderStats(root) {
     return b;
   }
 
-  row.appendChild(statBox(observers.length, 'Observateurs', '#2563eb'));
-  row.appendChild(statBox(avg+'%', 'Score moyen global', '#16a34a'));
+  row.appendChild(statBox(observers.length, (analysisMode==='longitudinal'&&longitudinalEligible())?'Observations':'Observateurs', '#2563eb'));
+  row.appendChild(statBox(avg==='—'?'—':avg+'%', 'Score moyen global', '#16a34a'));
   row.appendChild(statBox(diverg.length, 'Items divergents', diverg.length > 5 ? '#dc2626' : '#d97706'));
   row.appendChild(statBox(consensusPct+'%', 'Taux de consensus', consensusPct >= 70 ? '#16a34a' : '#d97706'));
 
@@ -674,7 +733,7 @@ function getConsensusStats() {
     d.items.forEach(function(id){
       var sc = observers.map(function(o){
         var r = o.responses[id];
-        return (r && r.score !== undefined) ? r.score : null;
+        return (r && !r.notApplicable && r.score >= 1 && r.score <= 4) ? r.score : null;
       }).filter(function(s){ return s !== null; });
       if (sc.length >= 2) {
         comparableCount++;
@@ -710,7 +769,8 @@ function buildComparisonData() {
 
   return {
     type: 'sais-comparative-observation',
-    version: 1,
+    version: 2.4,
+    analysisMode: analysisMode,
     exportedAt: new Date().toISOString(),
     observerCount: observers.length,
     dossierCodes: Array.from(new Set(observers.map(function(o){ return o.code; }).filter(Boolean))),
@@ -722,7 +782,12 @@ function buildComparisonData() {
         code: obs.code,
         level: obs.level,
         info: obs.info || {},
-        responses: obs.responses
+        responses: obs.responses,
+        timestamp: obs.timestamp || null,
+        observationDate: obs.observationDate || null,
+        helpDependency: obs.helpDependency || null,
+        finalized: !!obs.finalized,
+        sourceFile: obs.sourceFile || null
       };
     }),
     domainComparison: domains,
@@ -758,7 +823,7 @@ function buildComparisonPromptContext() {
   ctx += 'NOMBRE D’OBSERVATEURS : ' + data.observerCount + '\n';
   ctx += 'DOSSIER(S) : ' + (data.dossierCodes.length ? data.dossierCodes.join(', ') : 'Non renseigné') + '\n';
   ctx += 'NIVEAU(X) SCOLAIRE(S) : ' + (data.schoolLevels.length ? data.schoolLevels.join(', ') : 'Non renseigné') + '\n';
-  ctx += 'PROFILS : ' + observers.map(function(o){ return o.profile || 'Non renseigné'; }).join(', ') + '\n\n';
+  ctx += 'OBSERVATIONS : ' + observers.map(function(o){ return (o.profile || 'Non renseigné') + ' — ' + formatObsDate(o); }).join(' | ') + '\n\n';
 
   ctx += 'IMPACTS CLINIQUES RAPPORTÉS PAR OBSERVATEUR :\n';
   observers.forEach(function(obs){
@@ -768,6 +833,9 @@ function buildComparisonPromptContext() {
     ctx += '- Plan Cognitif/DYS : ' + (inf.impactCognitif || 'Non renseigné') + '\n';
     ctx += '- Plan Scolaire : ' + (inf.impactScolaire || 'Non renseigné') + '\n';
     ctx += '- Plan Relationnel : ' + (inf.impactRelationnel || 'Non renseigné') + '\n';
+    if (obs.helpDependency && obs.helpDependency.global !== undefined && obs.helpDependency.global !== null) {
+      ctx += '- Indice descriptif de dépendance aux aides : ' + obs.helpDependency.global + '/100 (indicateur interne non validé)\n';
+    }
   });
 
   ctx += '\nSCORES COMPARATIFS PAR DOMAINE :\n';
@@ -784,7 +852,7 @@ function buildComparisonPromptContext() {
     data.consensus.exactConsensusItems + '/' + data.consensus.comparableItems + ' items comparables).\n';
 
   if (data.divergences.length) {
-    ctx += '\nDIVERGENCES MAJEURES (écart ≥ 2 points sur l’échelle 0-4) :\n';
+    ctx += '\nDIVERGENCES MAJEURES (écart ≥ 2 points sur l’échelle 1-4 (non observé/N/A exclus)) :\n';
     data.divergences.slice(0,20).forEach(function(d){
       ctx += '- ' + d.label + ' [' + d.domain + '] — écart ' + d.ecart + ' : ';
       ctx += d.scores.filter(function(s){return s.score !== null;}).map(function(s){
@@ -795,6 +863,10 @@ function buildComparisonPromptContext() {
     ctx += '\nDIVERGENCES MAJEURES : aucune divergence ≥ 2 points.\n';
   }
 
+  ctx += '\nITEMS PRIORITAIRES / CONTEXTUALISÉS :\n';
+  observers.forEach(function(obs){
+    Object.keys(obs.responses||{}).forEach(function(id){var r=obs.responses[id];if(r&&(r.priority||r.context)){ctx+='- ['+obs.label+'] '+(ITEM_LABELS[id]||id)+(r.priority?' | PRIORITAIRE':'')+(r.context?' | contexte: '+r.context:'')+(r.comment?' | '+r.comment:'')+'\n';}});
+  });
   return ctx;
 }
 
@@ -1091,7 +1163,7 @@ function drawRadar() {
   var labels = DOMAINS.map(function(d){ return d.short; });
   var datasets = observers.map(function(obs, i) {
     var c = COLORS[i % COLORS.length];
-    var scores = DOMAINS.map(function(d){ return calcDomainScore(obs.responses, d.items) || 0; });
+    var scores = DOMAINS.map(function(d){ return calcDomainScore(obs.responses, d.items); });
     return {
       label: obs.label,
       data: scores,
@@ -1123,7 +1195,6 @@ function loadFiles(files) {
   errorMsg = '';
   var pending = files.length;
   if (!pending) return;
-
   Array.from(files).forEach(function(file) {
     var reader = new FileReader();
     reader.onload = function(ev) {
@@ -1131,21 +1202,18 @@ function loadFiles(files) {
         var data = JSON.parse(ev.target.result);
         if (!data || !data.info || !data.responses) throw new Error('Format invalide');
         var profile = data.info.profile || 'Inconnu';
-        var code    = data.info.code    || '—';
-        var label   = profile + (code !== '—' ? ' (' + code + ')' : '');
-        // Éviter les doublons exacts
-        var exists = observers.some(function(o){ return o.label === label; });
-        if (!exists) {
-          observers.push({ label: label, profile: profile, code: code, level: data.info.level || '—', responses: data.responses, info: data.info });
-        }
-      } catch(e) {
-        errorMsg = 'Erreur fichier "' + file.name + '" : ' + e.message;
-      }
-      pending--;
-      if (pending === 0) render();
+        var code = data.info.code || '—';
+        var timestamp=data.timestamp || data.exportedAt || null;
+        var observationDate=(data.info && data.info.observationDate) || data.observationDate || timestamp || null;
+        var temp={timestamp:timestamp,observationDate:observationDate};
+        var dateLabel=observationDate?formatObsDate(temp):file.name.replace(/\.json$/i,'');
+        var label=profile+(code!=='—'?' ('+code+')':'')+' — '+dateLabel;
+        var uid=file.name+'|'+observationDate+'|'+timestamp+'|'+profile+'|'+code;
+        if (!observers.some(function(o){return o.uid===uid;})) observers.push({uid:uid,label:label,profile:profile,code:code,level:data.info.level||'—',responses:data.responses,info:data.info,timestamp:timestamp,observationDate:observationDate,sourceFile:file.name,completion:data.completion||null,helpDependency:data.helpDependency||null,finalized:!!data.finalized});
+      } catch(e) { errorMsg='Erreur fichier "'+file.name+'" : '+e.message; }
+      pending--; if(pending===0){if(!longitudinalEligible())analysisMode='cross';render();}
     };
-    reader.onerror = function(){ errorMsg = 'Impossible de lire ' + file.name; pending--; if (!pending) render(); };
-    reader.readAsText(file);
+    reader.onerror=function(){errorMsg='Impossible de lire '+file.name;pending--;if(!pending)render();};reader.readAsText(file);
   });
 }
 
