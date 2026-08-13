@@ -55,6 +55,7 @@
         .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; }
         .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1rem; }
         .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; }
+        .info-grid-4 { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:1.5rem; }
         .grid-radar { display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; align-items: center; }
 
         /* Typography */
@@ -288,7 +289,7 @@
         .footer-nav { display: flex; justify-content: space-between; padding: 2rem 0; }
 
         @media (max-width: 768px) {
-            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+            .grid-2, .grid-3, .grid-4, .info-grid-4 { grid-template-columns: 1fr; }
             .obs-layout { flex-direction: column; }
             .obs-sidebar { width: 100%; }
             .grid-radar { grid-template-columns: 1fr; }
@@ -334,7 +335,8 @@ var SVG_ICONS = {
     ShieldAlert:  '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
     BarChart3:    '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
     Stethoscope:  '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/></svg>',
-    Brain:        '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.46 2.5 2.5 0 0 1-1.7-4.28 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.18-1.94z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.46 2.5 2.5 0 0 0 1.7-4.28 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.18-1.94z"/></svg>'
+    Brain:        '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.46 2.5 2.5 0 0 1-1.7-4.28 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.18-1.94z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.46 2.5 2.5 0 0 0 1.7-4.28 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.18-1.94z"/></svg>',
+    Home:         '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>'
 };
 function icon(name, size) {
     size = size || 20;
@@ -443,26 +445,27 @@ var DOMAINS = [
 ];
 
 var SCALES = [
-  { value:0, label:"Non observ\u00e9" },
-  { value:1, label:"Difficult\u00e9 importante" },
-  { value:2, label:"Difficult\u00e9 mod\u00e9r\u00e9e" },
+  { value:0, label:"Non observé" },
+  { value:1, label:"Difficulté importante" },
+  { value:2, label:"Difficulté modérée" },
   { value:3, label:"Satisfaisant" },
   { value:4, label:"Force notable" }
 ];
 
 var HELP_LEVELS = [
-  "Sans aide","Mat\u00e9riel seul","Aide humaine ponctuelle",
-  "Aide humaine constante","R\u00e9m\u00e9diation sp\u00e9cifique"
+  "Sans aide","Matériel seul","Aide humaine ponctuelle",
+  "Aide humaine constante","Remédiation spécifique"
 ];
 
-var PROFILES  = ["\u00c9ducateur","Enseignant","P\u00f4le territorial","CPMS","Th\u00e9rapeute"];
+var OBS_CONTEXTS = ["Classe","Évaluation","Récréation","Repas","Déplacement","Activité physique","Activité extérieure","Temps informel","Autre"];
+var PROFILES  = ["Éducateur","Enseignant","Pôle territorial","CPMS","Thérapeute"];
 var LEVELS    = ["Maternel","Primaire","Secondaire"];
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
 var state = {
   step: 'welcome',
   apiKey: '',
-  info: { code:'', profile:'', level:'', impactMoteur:'', impactCognitif:'', impactScolaire:'', impactRelationnel:'' },
+  info: { code:'', profile:'', level:'', observationDate:'', impactMoteur:'', impactCognitif:'', impactScolaire:'', impactRelationnel:'' },
   responses: {},
   domainIdx: 0,
   aiSynthesis: '',
@@ -472,6 +475,7 @@ var state = {
   errorMsg: '',
   saveError: '',
   showConfirmReset: false,
+  showFinalizeModal: false,
   chartInstance: null,
   currentDraftId: null
 };
@@ -481,8 +485,28 @@ var state = {
 // Les brouillons restent uniquement dans le navigateur de cet appareil.
 var DRAFTS_STORAGE_KEY = 'sais_observation_drafts_v1';
 
+function todayLocalDate() {
+  var d = new Date();
+  var y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
+  return y + '-' + m + '-' + day;
+}
+
+function dateFromISO(iso) {
+  if (!iso) return '';
+  var d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  var y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
+  return y + '-' + m + '-' + day;
+}
+
 function emptyInfo() {
-  return { code:'', profile:'', level:'', impactMoteur:'', impactCognitif:'', impactScolaire:'', impactRelationnel:'' };
+  return { code:'', profile:'', level:'', observationDate:todayLocalDate(), impactMoteur:'', impactCognitif:'', impactScolaire:'', impactRelationnel:'' };
+}
+
+function normalizeInfo(info, fallbackTimestamp) {
+  var out = Object.assign(emptyInfo(), info || {});
+  if (!out.observationDate) out.observationDate = dateFromISO(fallbackTimestamp) || todayLocalDate();
+  return out;
 }
 
 function getDrafts() {
@@ -510,15 +534,8 @@ function makeDraftId() {
 }
 
 function draftProgress() {
-  var total = 0, answered = 0;
-  DOMAINS.forEach(function(d){
-    d.items.forEach(function(item){
-      total++;
-      var r = state.responses[item.id];
-      if (r && r.score !== undefined && r.score !== null) answered++;
-    });
-  });
-  return { answered:answered, total:total, percent:total ? Math.round(answered/total*100) : 0 };
+  var c = getCompletionStats();
+  return { answered:c.completed, total:c.total, percent:c.percent, observed:c.observed, nonObserved:c.nonObserved, notApplicable:c.notApplicable, unanswered:c.unanswered };
 }
 
 function hasDraftContent() {
@@ -568,7 +585,7 @@ function resumeDraft(id) {
   var draft = getDrafts().find(function(d){ return d.id === id; });
   if (!draft) { alert("Ce brouillon n’existe plus."); render(); return; }
   state.currentDraftId = draft.id;
-  state.info = Object.assign(emptyInfo(), draft.info || {});
+  state.info = normalizeInfo(draft.info || {}, draft.createdAt || draft.updatedAt);
   state.responses = draft.responses || {};
   state.domainIdx = Number.isInteger(draft.domainIdx) ? draft.domainIdx : 0;
   state.aiSynthesis = draft.aiSynthesis || '';
@@ -582,10 +599,15 @@ function resumeDraft(id) {
 }
 
 function deleteDraft(id) {
-  var drafts = getDrafts().filter(function(d){ return d.id !== id; });
-  writeDrafts(drafts);
+  // Neutralise d'abord le brouillon courant pour éviter toute recréation par l'autosauvegarde.
   if (state.currentDraftId === id) state.currentDraftId = null;
+  var drafts = getDrafts().filter(function(d){ return d.id !== id; });
+  if (!writeDrafts(drafts)) {
+    alert("Impossible de supprimer ce brouillon sur ce navigateur.");
+    return false;
+  }
   render();
+  return true;
 }
 
 function deleteCurrentDraft() {
@@ -604,6 +626,55 @@ function formatDraftDate(iso) {
   }
 }
 
+// ─── INDICE DESCRIPTIF DE DÉPENDANCE AUX AIDES ───────────────────────────────
+// Indicateur interne non validé cliniquement. Plus le score est élevé,
+// plus la réalisation des activités observées dépend d'un soutien/compensation.
+var HELP_DEPENDENCY_WEIGHTS = {
+  "Sans aide": 0,
+  "Matériel seul": 20,
+  "Remédiation spécifique": 40,
+  "Aide humaine ponctuelle": 60,
+  "Aide humaine constante": 100
+};
+
+function dependencyLabel(score) {
+  if (score === null) return 'NR';
+  if (score < 20) return 'Faible';
+  if (score < 40) return 'Légère';
+  if (score < 60) return 'Modérée';
+  if (score < 80) return 'Élevée';
+  return 'Très élevée';
+}
+
+function calcHelpDependencyForItems(items) {
+  var vals = [];
+  items.forEach(function(item){
+    var r = state.responses[item.id];
+    if (!r || r.notApplicable || !(r.score >= 1 && r.score <= 4) || !r.help) return;
+    if (HELP_DEPENDENCY_WEIGHTS[r.help] !== undefined) vals.push(HELP_DEPENDENCY_WEIGHTS[r.help]);
+  });
+  if (!vals.length) return { score:null, count:0 };
+  return { score:Math.round(vals.reduce(function(a,b){return a+b;},0)/vals.length), count:vals.length };
+}
+
+function getHelpDependencyStats() {
+  var domainStats = DOMAINS.map(function(d){
+    var x = calcHelpDependencyForItems(d.items);
+    return { id:d.id, title:d.title, score:x.score, count:x.count };
+  });
+  var all = [];
+  DOMAINS.forEach(function(d){ d.items.forEach(function(item){
+    var r=state.responses[item.id];
+    if (!r || r.notApplicable || !(r.score >= 1 && r.score <= 4) || !r.help) return;
+    if (HELP_DEPENDENCY_WEIGHTS[r.help] !== undefined) all.push(HELP_DEPENDENCY_WEIGHTS[r.help]);
+  });});
+  return {
+    global: all.length ? Math.round(all.reduce(function(a,b){return a+b;},0)/all.length) : null,
+    count: all.length,
+    domains: domainStats
+  };
+}
+
 function setState(patch) {
   Object.assign(state, patch);
   saveCurrentDraft();
@@ -611,15 +682,67 @@ function setState(patch) {
 }
 
 // ─── SCORES ───────────────────────────────────────────────────────────────────
+function getCompletionStats() {
+  var total=0, observed=0, nonObserved=0, notApplicable=0;
+  DOMAINS.forEach(function(d){ d.items.forEach(function(i){
+    total++;
+    var r=state.responses[i.id];
+    if (r && r.notApplicable) notApplicable++;
+    else if (r && r.score === 0) nonObserved++;
+    else if (r && r.score >= 1 && r.score <= 4) observed++;
+  }); });
+  var completed=observed+nonObserved+notApplicable;
+  return {total:total, observed:observed, nonObserved:nonObserved, notApplicable:notApplicable,
+    completed:completed, unanswered:total-completed, percent:total?Math.round(completed/total*100):0};
+}
+
+function getDomainCompletion(d) {
+  var observed=0, nonObserved=0, notApplicable=0;
+  d.items.forEach(function(i){ var r=state.responses[i.id];
+    if(r&&r.notApplicable) notApplicable++;
+    else if(r&&r.score===0) nonObserved++;
+    else if(r&&r.score>=1&&r.score<=4) observed++;
+  });
+  var completed=observed+nonObserved+notApplicable;
+  return {observed:observed,nonObserved:nonObserved,notApplicable:notApplicable,completed:completed,total:d.items.length};
+}
+
 function calcScores() {
   var domains = DOMAINS.map(function(d) {
-    var vals = d.items.map(function(i){ return state.responses[i.id] && state.responses[i.id].score; }).filter(function(v){ return v !== undefined && v !== null; });
+    var vals = d.items.map(function(i){
+      var r=state.responses[i.id];
+      return (r && !r.notApplicable && r.score >= 1 && r.score <= 4) ? r.score : null;
+    }).filter(function(v){ return v !== null; });
     var total = vals.reduce(function(a,b){ return a+b; }, 0);
-    var percent = vals.length > 0 ? (total / (d.items.length * 4)) * 100 : 0;
-    return { id:d.id, title:d.title, percent:percent, answered:vals.length };
+    var percent = vals.length > 0 ? (total / (vals.length * 4)) * 100 : null;
+    var comp=getDomainCompletion(d);
+    return { id:d.id, title:d.title, percent:percent, answered:vals.length, completion:comp };
   });
-  var global = domains.length > 0 ? domains.reduce(function(a,b){ return a+b.percent; },0) / domains.length : 0;
-  return { domains:domains, global:global };
+  var valid=domains.filter(function(d){return d.percent!==null;});
+  var global = valid.length ? valid.reduce(function(a,b){ return a+b.percent; },0) / valid.length : null;
+  return { domains:domains, global:global, completion:getCompletionStats() };
+}
+
+function getItemSummaries() {
+  var strengths=[], vigilance=[], priorities=[];
+  DOMAINS.forEach(function(d){ d.items.forEach(function(item){
+    var r=state.responses[item.id]; if(!r) return;
+    var x={id:item.id,label:item.label,domain:d.title,score:r.score,comment:r.comment||'',help:r.help||'',context:r.context||''};
+    if(r.priority) priorities.push(x);
+    if(!r.notApplicable && r.score===4) strengths.push(x);
+    if(!r.notApplicable && (r.score===1 || r.score===2)) vigilance.push(x);
+  }); });
+  return {strengths:strengths,vigilance:vigilance,priorities:priorities};
+}
+
+function requestReportGeneration() {
+  var c=getCompletionStats();
+  if(c.unanswered>0 || c.nonObserved>0) {
+    var msg='Complétude : '+c.completed+'/'+c.total+' critères ('+c.percent+'%).\n'+
+      c.observed+' observés et cotés, '+c.nonObserved+' non observés, '+c.notApplicable+' non applicables, '+c.unanswered+' sans réponse.\n\nGénérer le rapport malgré tout ?';
+    if(!confirm(msg)) return;
+  }
+  setState({step:'results'}); window.scrollTo(0,0);
 }
 
 // ─── API ──────────────────────────────────────────────────────────────────────
@@ -668,16 +791,65 @@ function callGemini(prompt, sysInstruction, onSuccess, onError) {
 }
 
 // ─── SAVE / LOAD ──────────────────────────────────────────────────────────────
-function saveProject() {
+function buildProjectPayload(finalized) {
+  return {
+    type:'sais-observation',
+    version:2.4,
+    info:state.info,
+    responses:state.responses,
+    aiSynthesis:state.aiSynthesis,
+    aiGoals:state.aiGoals,
+    domainIdx:state.domainIdx,
+    step:state.step,
+    completion:getCompletionStats(),
+    helpDependency:getHelpDependencyStats(),
+    observationDate:state.info.observationDate || null,
+    finalized:!!finalized,
+    finalizedAt:finalized ? new Date().toISOString() : null,
+    timestamp:new Date().toISOString()
+  };
+}
+
+function downloadProject(finalized) {
   try {
-    var data = JSON.stringify({ info:state.info, responses:state.responses, aiSynthesis:state.aiSynthesis, aiGoals:state.aiGoals, domainIdx:state.domainIdx, step:state.step, timestamp:new Date().toISOString() }, null, 2);
+    var payload = buildProjectPayload(finalized);
+    var data = JSON.stringify(payload, null, 2);
     var blob = new Blob([data], { type:'application/json' });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
-    a.href = url; a.download = 'obs_' + (state.info.code || 'projet') + '_' + new Date().toISOString().slice(0,10) + '.json';
+    var obsDate = state.info.observationDate || todayLocalDate();
+    a.href = url;
+    a.download = 'obs_' + (state.info.code || 'projet') + '_' + obsDate + (finalized ? '_final' : '') + '.json';
     document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-    setState({ saveError:'' });
-  } catch(e) { setState({ saveError:"Erreur sauvegarde: " + e.message }); }
+    state.saveError = '';
+    return true;
+  } catch(e) {
+    state.saveError = "Erreur sauvegarde: " + e.message;
+    return false;
+  }
+}
+
+function saveProject() {
+  var ok = downloadProject(false);
+  if (ok) saveCurrentDraft();
+  render();
+}
+
+function finalizeObservation() {
+  if (!downloadProject(true)) { render(); return; }
+  deleteCurrentDraft();
+  state.responses = {};
+  state.info = emptyInfo();
+  state.aiSynthesis = '';
+  state.aiGoals = '';
+  state.errorMsg = '';
+  state.saveError = '';
+  state.domainIdx = 0;
+  state.showFinalizeModal = false;
+  state.showConfirmReset = false;
+  state.step = 'welcome';
+  render();
+  window.scrollTo(0,0);
 }
 
 function loadProject(file) {
@@ -687,7 +859,8 @@ function loadProject(file) {
       var data = JSON.parse(ev.target.result);
       if (!data || !data.info || !data.responses) throw new Error("Fichier invalide.");
       state.currentDraftId = makeDraftId();
-      setState({ info:Object.assign(emptyInfo(), data.info), responses:data.responses, aiSynthesis:data.aiSynthesis||'', aiGoals:data.aiGoals||'', domainIdx:data.domainIdx||0, step:data.step||'results', errorMsg:'', saveError:'' });
+      var fallbackTs = data.observationDate || data.timestamp || data.exportedAt || null;
+      setState({ info:normalizeInfo(data.info, fallbackTs), responses:data.responses, aiSynthesis:data.aiSynthesis||'', aiGoals:data.aiGoals||'', domainIdx:data.domainIdx||0, step:data.step||'results', errorMsg:'', saveError:'' });
     } catch(e) { alert("Impossible de charger: " + e.message); }
   };
   reader.onerror = function(){ alert("Erreur lecture fichier."); };
@@ -890,9 +1063,23 @@ function renderWelcome(root) {
 
       var acts = h('div',{style:{display:'flex',gap:'0.5rem',flexWrap:'wrap'}});
       acts.appendChild(hBtn([hIcon('ChevronRight',16),' Reprendre'],'btn-primary',function(){ resumeDraft(draft.id); }));
-      acts.appendChild(hBtn([hIcon('Trash2',15),' Supprimer'],'btn-danger',function(){
-        if (confirm('Supprimer définitivement ce brouillon local ?')) deleteDraft(draft.id);
-      }));
+      var deleteBtn = hBtn([hIcon('Trash2',15),' Supprimer'],'btn-danger',function(){
+        // Confirmation en deux clics : plus fiable que confirm(), parfois bloqué selon l'hébergement.
+        if (deleteBtn.dataset.confirmDelete === '1') {
+          deleteDraft(draft.id);
+          return;
+        }
+        deleteBtn.dataset.confirmDelete = '1';
+        deleteBtn.textContent = 'Confirmer la suppression';
+        deleteBtn.style.fontWeight = '800';
+        setTimeout(function(){
+          if (!deleteBtn.isConnected) return;
+          deleteBtn.dataset.confirmDelete = '0';
+          deleteBtn.textContent = 'Supprimer';
+          deleteBtn.style.fontWeight = '';
+        }, 5000);
+      });
+      acts.appendChild(deleteBtn);
       row.appendChild(acts);
       draftBody.appendChild(row);
     });
@@ -938,8 +1125,8 @@ function renderInfo(root) {
   var wrap = h('div', { className:'max-w-4xl py-12 px-4' });
 
   wrap.appendChild(hCard("Identification et Impacts Cliniques", "Stethoscope", "", function(body) {
-    // Row 1: code, profile, level
-    var row1 = h('div', { className:'grid-3', style:{marginBottom:'2rem'} });
+    // Row 1: code, profile, level, observation date
+    var row1 = h('div', { className:'info-grid-4', style:{marginBottom:'2rem'} });
 
     var codeWrap = h('div');
     codeWrap.appendChild(h('label', { htmlFor:'inf-code', className:'label text-slate-500' }, "ID Dossier"));
@@ -968,6 +1155,13 @@ function renderInfo(root) {
     LEVELS.forEach(function(l){ var o=h('option',{value:l},l); if(state.info.level===l) o.selected=true; levSel.appendChild(o); });
     levWrap.appendChild(levSel);
     row1.appendChild(levWrap);
+
+    var dateWrap = h('div');
+    dateWrap.appendChild(h('label', { htmlFor:'inf-date', className:'label text-slate-500' }, "Date de l'observation"));
+    var dateInput = h('input', { type:'date', id:'inf-date', value:state.info.observationDate || todayLocalDate(), onChange:function(e){ state.info.observationDate=e.target.value; saveCurrentDraft(); } });
+    dateWrap.appendChild(dateInput);
+    dateWrap.appendChild(h('p',{style:{fontSize:'0.68rem',color:'#64748b',marginTop:'0.35rem',lineHeight:'1.4'}},"Utilisée pour le suivi longitudinal du dossier."));
+    row1.appendChild(dateWrap);
     body.appendChild(row1);
 
     // Separator
@@ -1016,11 +1210,14 @@ function renderObservation(root) {
   // ── Sidebar
   var sidebar = h('aside', { className:'obs-sidebar no-print' });
 
-  // Progress
+  // Progression réelle de la grille
+  var completion = getCompletionStats();
   var progCard = h('div', { className:'card', style:{padding:'1rem',marginBottom:'1rem',textAlign:'center'} });
-  progCard.appendChild(h('p', { className:'label text-slate-400', style:{marginBottom:'0.5rem'} }, "Progression " + (state.domainIdx+1) + "/" + DOMAINS.length));
-  var track = h('div', { className:'progress-track', style:{height:'6px',marginTop:'0.5rem'} });
-  var fill  = h('div', { className:'progress-fill', style:{width: ((state.domainIdx+1)/DOMAINS.length*100)+'%',height:'6px'} });
+  progCard.appendChild(h('p', { className:'label text-slate-400', style:{marginBottom:'0.35rem'} }, "Complétude de l’observation"));
+  progCard.appendChild(h('p',{style:{fontWeight:'900',fontSize:'1.1rem',color:'#1e3a8a'}}, completion.completed+'/'+completion.total+' — '+completion.percent+'%'));
+  progCard.appendChild(h('p',{style:{fontSize:'0.65rem',color:'#64748b',marginTop:'0.2rem'}},completion.observed+' cotés · '+completion.nonObserved+' non observés · '+completion.notApplicable+' N/A'));
+  var track = h('div', { className:'progress-track', style:{height:'6px',marginTop:'0.6rem'} });
+  var fill  = h('div', { className:'progress-fill', style:{width: completion.percent+'%',height:'6px'} });
   track.appendChild(fill); progCard.appendChild(track);
   sidebar.appendChild(progCard);
 
@@ -1031,10 +1228,13 @@ function renderObservation(root) {
     var btn = h('button', { className:'domain-btn' + (isActive?' active':''), onClick:function(){ setState({domainIdx:i}); window.scrollTo(0,0); } });
     var textSpan = h('span', { style:{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'} }, (i+1)+'. '+d.title);
     btn.appendChild(textSpan);
-    if (sc.domains[i].answered === d.items.length) {
-      var ck = hIcon('CheckCircle2', 14);
-      ck.style.color='#4ade80'; ck.style.flexShrink='0';
-      btn.appendChild(ck);
+    var dc = getDomainCompletion(d);
+    if (dc.completed === dc.total) {
+      var ck = hIcon('CheckCircle2', 14); ck.style.color='#4ade80'; ck.style.flexShrink='0'; btn.appendChild(ck);
+    } else if (dc.completed > 0) {
+      var partial = h('span',{style:{fontWeight:'900',color:isActive?'#fde68a':'#d97706',fontSize:'0.8rem'}},'◐'); btn.appendChild(partial);
+    } else {
+      btn.appendChild(h('span',{style:{color:isActive?'#cbd5e1':'#cbd5e1'}},'○'));
     }
     nav.appendChild(btn);
   });
@@ -1044,7 +1244,7 @@ function renderObservation(root) {
   var sideGenBtn = h('button', {
     className: 'btn btn-success',
     style: { width:'100%', marginTop:'1rem', padding:'0.875rem 1rem', fontSize:'0.9rem', fontWeight:'700', borderRadius:'0.75rem' },
-    onClick: function(){ setState({step:'results'}); window.scrollTo(0,0); }
+    onClick: requestReportGeneration
   });
   var genIco = hIcon('BarChart3', 18);
   sideGenBtn.appendChild(genIco);
@@ -1070,73 +1270,52 @@ function renderObservation(root) {
   // Domain header
   var domHdr = h('div', { className:'domain-header' });
   domHdr.appendChild(h('h2', { style:{fontSize:'1.5rem',fontWeight:'900'} }, dom.title));
-  layout.appendChild(sidebar);
   main.appendChild(domHdr);
 
   // Items
   dom.items.forEach(function(item) {
-    var itemCard = h('div', { className:'card', style:{marginBottom:'1rem'} });
+    var res = state.responses[item.id] || {};
+    var itemCard = h('div', { className:'card', style:{marginBottom:'1rem',borderColor:res.priority?'#f59e0b':'#e2e8f0'} });
     var itemBody = h('div', { className:'card-body' });
 
-    itemBody.appendChild(h('h4', { style:{fontWeight:'700',color:'#1e293b',fontSize:'1.125rem',marginBottom:'0.25rem'} }, item.label));
-    itemBody.appendChild(h('p', { style:{fontSize:'0.75rem',color:'#94a3b8',fontStyle:'italic',marginBottom:'1.5rem',lineHeight:'1.6'} }, item.help));
+    var titleRow=h('div',{style:{display:'flex',justifyContent:'space-between',gap:'1rem',alignItems:'flex-start',marginBottom:'0.25rem'}});
+    titleRow.appendChild(h('h4', { style:{fontWeight:'700',color:'#1e293b',fontSize:'1.125rem'} }, item.label));
+    var prioBtn=h('button',{className:'btn '+(res.priority?'btn-success':'btn-outline'),style:{padding:'0.35rem 0.65rem',fontSize:'0.7rem',flexShrink:'0'},onClick:function(){
+      if(!state.responses[item.id])state.responses[item.id]={}; state.responses[item.id].priority=!state.responses[item.id].priority; saveCurrentDraft(); render();
+    }},res.priority?'★ Prioritaire':'☆ Marquer prioritaire');
+    if(res.priority){prioBtn.style.background='#f59e0b';prioBtn.style.borderColor='#f59e0b';}
+    titleRow.appendChild(prioBtn); itemBody.appendChild(titleRow);
+    itemBody.appendChild(h('p', { style:{fontSize:'0.75rem',color:'#94a3b8',fontStyle:'italic',marginBottom:'1.2rem',lineHeight:'1.6'} }, item.help));
 
-    // Score buttons
-    var fs = h('fieldset');
-    var legend = h('legend', { className:'sr-only' }, "Score pour: " + item.label);
-    fs.appendChild(legend);
-    var btnGrid = h('div', { className:'grid-5', style:{marginBottom:'1.5rem'} });
-    SCALES.forEach(function(s) {
-      var isActive = state.responses[item.id] && state.responses[item.id].score === s.value;
-      var sb = h('button', {
-        className:'score-btn' + (isActive?' active active-'+s.value:''),
-        'aria-label': s.value + ' - ' + s.label,
-        onClick:function() {
-          if (!state.responses[item.id]) state.responses[item.id] = {};
-          state.responses[item.id].score = s.value;
-          render();
-        }
-      });
-      sb.appendChild(h('span', { style:{fontSize:'1.125rem',fontWeight:'900'} }, ''+s.value));
-      sb.appendChild(h('span', { style:{fontSize:'0.5rem',fontWeight:'900',textTransform:'uppercase',lineHeight:'1.1',textAlign:'center'} }, s.label));
-      btnGrid.appendChild(sb);
+    var fs=h('fieldset'); fs.appendChild(h('legend',{className:'sr-only'},'Score pour: '+item.label));
+    var btnGrid=h('div',{style:{display:'grid',gridTemplateColumns:'repeat(6, minmax(0,1fr))',gap:'0.5rem',marginBottom:'1.2rem'}});
+    SCALES.forEach(function(s){
+      var active=!res.notApplicable && res.score===s.value;
+      var sb=h('button',{className:'score-btn'+(active?' active active-'+s.value:''),onClick:function(){
+        if(!state.responses[item.id])state.responses[item.id]={}; state.responses[item.id].notApplicable=false; state.responses[item.id].score=s.value; saveCurrentDraft(); render();
+      }});
+      sb.appendChild(h('span',{style:{fontSize:'1.05rem',fontWeight:'900'}},''+s.value));
+      sb.appendChild(h('span',{style:{fontSize:'0.48rem',fontWeight:'900',textTransform:'uppercase',lineHeight:'1.1',textAlign:'center'}},s.label)); btnGrid.appendChild(sb);
     });
-    fs.appendChild(btnGrid);
-    itemBody.appendChild(fs);
+    var naActive=!!res.notApplicable;
+    var na=h('button',{className:'score-btn'+(naActive?' active':''),style:naActive?{background:'#475569',borderColor:'#475569',color:'#fff'}:{},onClick:function(){
+      if(!state.responses[item.id])state.responses[item.id]={}; state.responses[item.id].notApplicable=true; delete state.responses[item.id].score; saveCurrentDraft(); render();
+    }});
+    na.appendChild(h('span',{style:{fontSize:'0.85rem',fontWeight:'900'}},'N/A'));
+    na.appendChild(h('span',{style:{fontSize:'0.48rem',fontWeight:'900',textTransform:'uppercase',lineHeight:'1.1',textAlign:'center'}},'Non applicable')); btnGrid.appendChild(na);
+    fs.appendChild(btnGrid); itemBody.appendChild(fs);
 
-    // Help + comment
-    var row2 = h('div', { className:'grid-2', style:{borderTop:'1px solid #f1f5f9',paddingTop:'1rem'} });
-
-    var helpWrap = h('div');
-    helpWrap.appendChild(h('label', { htmlFor:'help-'+item.id, className:'sr-only' }, "Aide pour: " + item.label));
-    var helpSel = h('select', { id:'help-'+item.id, style:{fontSize:'0.75rem',fontWeight:'700'},
-      onChange:function(e){
-        if (!state.responses[item.id]) state.responses[item.id]={};
-        state.responses[item.id].help = e.target.value;
-        render();
-      }
-    });
-    var curHelp = state.responses[item.id] && state.responses[item.id].help || '';
-    helpSel.appendChild(h('option',{value:''},"Niveau d'aide requis..."));
-    HELP_LEVELS.forEach(function(hl){ var o=h('option',{value:hl},hl); if(curHelp===hl) o.selected=true; helpSel.appendChild(o); });
-    helpWrap.appendChild(helpSel);
-
-    var commWrap = h('div');
-    commWrap.appendChild(h('label', { htmlFor:'com-'+item.id, className:'sr-only' }, "Observations pour: " + item.label));
-    var curComment = state.responses[item.id] && state.responses[item.id].comment || '';
-    var commTa = h('textarea', { id:'com-'+item.id, placeholder:"Pr\u00e9cisions / observations...", rows:'2', style:{height:'3.5rem',fontSize:'0.75rem'},
-      onInput:function(e){
-        if (!state.responses[item.id]) state.responses[item.id]={};
-        state.responses[item.id].comment = e.target.value;
-      }
-    }, curComment);
-    commWrap.appendChild(commTa);
-
-    row2.appendChild(helpWrap);
-    row2.appendChild(commWrap);
-    itemBody.appendChild(row2);
-    itemCard.appendChild(itemBody);
-    main.appendChild(itemCard);
+    var row2=h('div',{style:{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:'1rem',borderTop:'1px solid #f1f5f9',paddingTop:'1rem'}});
+    var helpWrap=h('div'); helpWrap.appendChild(h('label',{className:'label text-slate-400'},"Niveau d’aide"));
+    var helpSel=h('select',{style:{fontSize:'0.75rem',fontWeight:'700'},onChange:function(e){if(!state.responses[item.id])state.responses[item.id]={};state.responses[item.id].help=e.target.value;saveCurrentDraft();}});
+    helpSel.appendChild(h('option',{value:''},"Niveau d'aide requis...")); HELP_LEVELS.forEach(function(hl){var o=h('option',{value:hl},hl);if(res.help===hl)o.selected=true;helpSel.appendChild(o);}); helpWrap.appendChild(helpSel);
+    var ctxWrap=h('div');ctxWrap.appendChild(h('label',{className:'label text-slate-400'},'Contexte (facultatif)'));
+    var ctxSel=h('select',{style:{fontSize:'0.75rem'},onChange:function(e){if(!state.responses[item.id])state.responses[item.id]={};state.responses[item.id].context=e.target.value;saveCurrentDraft();}});
+    ctxSel.appendChild(h('option',{value:''},'Contexte non précisé'));OBS_CONTEXTS.forEach(function(c){var o=h('option',{value:c},c);if(res.context===c)o.selected=true;ctxSel.appendChild(o);});ctxWrap.appendChild(ctxSel);
+    var commWrap=h('div');commWrap.appendChild(h('label',{className:'label text-slate-400'},'Observation / précision'));
+    var commTa=h('textarea',{placeholder:'Précisions / observations...',rows:'2',style:{height:'3.5rem',fontSize:'0.75rem'},onInput:function(e){if(!state.responses[item.id])state.responses[item.id]={};state.responses[item.id].comment=e.target.value;}},res.comment||'');commWrap.appendChild(commTa);
+    row2.appendChild(helpWrap);row2.appendChild(ctxWrap);row2.appendChild(commWrap);itemBody.appendChild(row2);
+    itemCard.appendChild(itemBody);main.appendChild(itemCard);
   });
 
   // Nav buttons
@@ -1144,7 +1323,7 @@ function renderObservation(root) {
   var prevBtn = hBtn("Pr\u00e9c\u00e9dent", "btn-outline", function(){ setState({domainIdx:Math.max(0,state.domainIdx-1)}); window.scrollTo(0,0); }, state.domainIdx===0);
   fnav.appendChild(prevBtn);
   if (state.domainIdx === DOMAINS.length-1) {
-    var genBtn = hBtn("G\u00e9n\u00e9rer le rapport", "btn-success", function(){ setState({step:'results'}); window.scrollTo(0,0); });
+    var genBtn = hBtn("G\u00e9n\u00e9rer le rapport", "btn-success", requestReportGeneration);
     genBtn.style.padding = '0.625rem 2rem';
     fnav.appendChild(genBtn);
   } else {
@@ -1170,16 +1349,55 @@ function renderResults(root) {
     "Dossier\u00a0: ",
     h('strong',{style:{color:'#1d4ed8'}},state.info.code),
     state.info.level ? h('span',{style:{marginLeft:'0.75rem',fontSize:'0.8rem',background:'#eff6ff',color:'#1d4ed8',padding:'0.15rem 0.5rem',borderRadius:'9999px',fontWeight:'600'}},state.info.level) : '',
-    state.info.profile ? h('span',{style:{marginLeft:'0.5rem',fontSize:'0.8rem',background:'#f1f5f9',color:'#475569',padding:'0.15rem 0.5rem',borderRadius:'9999px',fontWeight:'600'}},state.info.profile) : ''
+    state.info.profile ? h('span',{style:{marginLeft:'0.5rem',fontSize:'0.8rem',background:'#f1f5f9',color:'#475569',padding:'0.15rem 0.5rem',borderRadius:'9999px',fontWeight:'600'}},state.info.profile) : '',
+    state.info.observationDate ? h('span',{style:{marginLeft:'0.5rem',fontSize:'0.8rem',background:'#f0fdf4',color:'#15803d',padding:'0.15rem 0.5rem',borderRadius:'9999px',fontWeight:'600'}},new Date(state.info.observationDate+'T12:00:00').toLocaleDateString('fr-BE')) : ''
   ]));
   hdr.appendChild(hdrLeft);
 
   var btnRow = h('div', { style:{display:'flex',flexWrap:'wrap',gap:'0.75rem'} });
   btnRow.appendChild(hBtn([hIcon('Save',16)," Sauvegarder .json"],"btn-success",saveProject));
-  btnRow.appendChild(hBtn([hIcon('Printer',16)," Imprimer / PDF"],"btn-primary",function(){ window.print(); }));
+  btnRow.appendChild(hBtn([hIcon('CheckCircle2',16)," Finaliser l'observation"],"btn-primary",function(){ setState({showFinalizeModal:true}); }));
+  btnRow.appendChild(hBtn([hIcon('Printer',16)," Imprimer / PDF"],"btn-outline",function(){ window.print(); }));
   btnRow.appendChild(hBtn([hIcon('Trash2',16)," R\u00e9initialiser"],"btn-danger",function(){ setState({showConfirmReset:true}); }));
   hdr.appendChild(btnRow);
   wrap.appendChild(hdr);
+
+  var comp = getCompletionStats();
+  var compAlert=h('div',{className:'alert '+(comp.unanswered?'alert-orange':'alert-blue'),style:{marginBottom:'1.5rem'}},
+    'Complétude : '+comp.completed+'/'+comp.total+' ('+comp.percent+'%) — '+comp.observed+' critères cotés, '+comp.nonObserved+' non observés, '+comp.notApplicable+' non applicables, '+comp.unanswered+' sans réponse. Les scores excluent les critères non observés et non applicables.');
+  wrap.appendChild(compAlert);
+
+  var tri=getItemSummaries();
+  var triGrid=h('div',{className:'grid-3',style:{marginBottom:'2rem'}});
+  function triCard(title,items,color,emptyText){
+    var c=h('div',{className:'card'});var b=h('div',{className:'card-body'});b.appendChild(h('h3',{style:{fontSize:'0.9rem',fontWeight:'900',color:color,marginBottom:'0.75rem'}},title));
+    if(!items.length)b.appendChild(h('p',{style:{fontSize:'0.75rem',color:'#94a3b8'}},emptyText));
+    items.slice(0,8).forEach(function(x){var txt=x.label+(x.context?' · '+x.context:'');b.appendChild(h('div',{style:{fontSize:'0.72rem',padding:'0.35rem 0',borderBottom:'1px solid #f1f5f9'}},txt));});c.appendChild(b);return c;
+  }
+  triGrid.appendChild(triCard('Forces observées',tri.strengths,'#15803d','Aucune force cotée 4.'));
+  triGrid.appendChild(triCard('Points de vigilance',tri.vigilance,'#b45309','Aucun item coté 1–2.'));
+  triGrid.appendChild(triCard('Priorités professionnelles',tri.priorities,'#c2410c','Aucun item marqué prioritaire.'));
+  wrap.appendChild(triGrid);
+
+  // Finalisation modal
+  if (state.showFinalizeModal) {
+    var fOverlay = h('div', { className:'modal-overlay no-print' });
+    var fModal = h('div', { style:{background:'#fff',border:'1px solid #bfdbfe',borderRadius:'0.75rem',padding:'2rem',maxWidth:'32rem',width:'100%',boxShadow:'0 25px 50px -12px rgba(0,0,0,0.25)'} });
+    var fComp = getCompletionStats();
+    var fi = hIcon('CheckCircle2', 40); fi.style.color='#16a34a'; fi.style.margin='0 auto 1rem'; fModal.appendChild(fi);
+    fModal.appendChild(h('h3',{style:{fontSize:'1.2rem',fontWeight:'800',marginBottom:'0.5rem',textAlign:'center'}},"Finaliser cette observation ?"));
+    fModal.appendChild(h('p',{style:{color:'#475569',fontSize:'0.85rem',marginBottom:'1rem',lineHeight:'1.6',textAlign:'center'}},
+      "Un fichier JSON final sera téléchargé puis le brouillon local sera supprimé de cet appareil."));
+    var fSummary = h('div',{style:{background:fComp.unanswered?'#fff7ed':'#f0fdf4',border:'1px solid '+(fComp.unanswered?'#fed7aa':'#bbf7d0'),padding:'0.85rem',borderRadius:'0.6rem',fontSize:'0.78rem',color:'#475569',marginBottom:'1.25rem',lineHeight:'1.6'}},
+      'Complétude : '+fComp.completed+'/'+fComp.total+' ('+fComp.percent+'%). '+fComp.unanswered+' critère'+(fComp.unanswered>1?'s':'')+' sans réponse.');
+    fModal.appendChild(fSummary);
+    if (fComp.unanswered) fModal.appendChild(h('p',{style:{fontSize:'0.75rem',color:'#b45309',fontWeight:'700',marginBottom:'1rem'}},
+      "L'observation peut être finalisée malgré les critères sans réponse ; ils resteront identifiés comme tels dans le fichier."));
+    var fBtns=h('div',{style:{display:'flex',gap:'0.75rem',justifyContent:'center',flexWrap:'wrap'}});
+    fBtns.appendChild(hBtn("Annuler","btn-outline",function(){ setState({showFinalizeModal:false}); }));
+    fBtns.appendChild(hBtn([hIcon('Save',16)," Exporter et finaliser"],"btn-success",finalizeObservation));
+    fModal.appendChild(fBtns); fOverlay.appendChild(fModal); wrap.appendChild(fOverlay);
+  }
 
   // Reset modal
   if (state.showConfirmReset) {
@@ -1198,11 +1416,6 @@ function renderResults(root) {
       state.responses={}; state.info=emptyInfo();
       state.aiSynthesis=''; state.aiGoals=''; state.errorMsg=''; state.saveError=''; state.domainIdx=0; state.showConfirmReset=false;
       state.step='welcome'; 
-// Autosauvegarde après chaque saisie/modification.
-// Les handlers des champs mettent d'abord state à jour, puis cet écouteur sauvegarde le brouillon.
-document.addEventListener('input', function(){ saveCurrentDraft(); });
-document.addEventListener('change', function(){ saveCurrentDraft(); });
-
 render(); window.scrollTo(0,0);
     }));
     modal.appendChild(mbRow);
@@ -1227,20 +1440,20 @@ render(); window.scrollTo(0,0);
 
     // Left: score summary
     var leftCol = h('div',{style:{textAlign:'center'}});
-    var gPct = Math.round(sc.global);
-    var gColor = gPct>70?'#16a34a':gPct<40?'#dc2626':'#1d4ed8';
+    var gPct = sc.global===null ? null : Math.round(sc.global);
+    var gColor = gPct===null?'#64748b':gPct>70?'#16a34a':gPct<40?'#dc2626':'#1d4ed8';
     leftCol.appendChild(h('p',{className:'label text-slate-400',style:{marginBottom:'0.5rem'}},"Taux d'autonomie moyen"));
-    leftCol.appendChild(h('p',{style:{fontSize:'3.75rem',fontWeight:'900',color:gColor}},gPct+'%'));
+    leftCol.appendChild(h('p',{style:{fontSize:'3.75rem',fontWeight:'900',color:gColor}},gPct===null?'NR':gPct+'%'));
     var pTrack = h('div',{className:'progress-track',style:{height:'8px',marginTop:'1rem',marginBottom:'1.5rem'}});
-    pTrack.appendChild(h('div',{className:'progress-fill',style:{width:sc.global+'%',height:'8px',background:gColor}}));
+    pTrack.appendChild(h('div',{className:'progress-fill',style:{width:(sc.global===null?0:sc.global)+'%',height:'8px',background:gColor}}));
     leftCol.appendChild(pTrack);
 
     // Mini legend
     sc.domains.forEach(function(d){
       var row = h('div',{style:{display:'flex',alignItems:'center',gap:'0.5rem',marginBottom:'0.2rem'}});
-      var dot = h('div',{style:{width:'8px',height:'8px',borderRadius:'50%',flexShrink:'0',background:d.percent>=70?'#22c55e':d.percent<40?'#f87171':'#fbbf24'}});
+      var dot = h('div',{style:{width:'8px',height:'8px',borderRadius:'50%',flexShrink:'0',background:d.percent===null?'#cbd5e1':d.percent>=70?'#22c55e':d.percent<40?'#f87171':'#fbbf24'}});
       var titleEl = h('span',{style:{fontSize:'0.65rem',color:'#64748b',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',flex:'1'}},d.title);
-      var pctEl  = h('span',{style:{fontSize:'0.65rem',fontWeight:'700',color:'#1e293b',marginLeft:'auto',flexShrink:'0'}},Math.round(d.percent)+'%');
+      var pctEl  = h('span',{style:{fontSize:'0.65rem',fontWeight:'700',color:'#1e293b',marginLeft:'auto',flexShrink:'0'}},(d.percent===null?'NR':Math.round(d.percent)+'%'));
       row.appendChild(dot); row.appendChild(titleEl); row.appendChild(pctEl);
       leftCol.appendChild(row);
     });
@@ -1283,6 +1496,32 @@ render(); window.scrollTo(0,0);
     body.appendChild(chartWrap);
   }));
 
+  // Indice descriptif de dépendance aux aides
+  var dep = getHelpDependencyStats();
+  wrap.appendChild(hCard("Indice descriptif de dépendance aux aides","ShieldAlert","",function(body){
+    body.parentElement.style.borderColor='#c7d2fe';
+    var dGrid=h('div',{style:{display:'grid',gridTemplateColumns:'minmax(180px,0.8fr) minmax(0,2fr)',gap:'1.5rem',alignItems:'start'}});
+    var dMain=h('div',{style:{textAlign:'center',background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:'0.75rem',padding:'1.25rem'}});
+    dMain.appendChild(h('p',{className:'label text-slate-400',style:{marginBottom:'0.5rem'}},"Indice global"));
+    dMain.appendChild(h('p',{style:{fontSize:'3rem',fontWeight:'900',color:dep.global===null?'#64748b':dep.global>=60?'#dc2626':dep.global>=40?'#d97706':'#16a34a'}},dep.global===null?'NR':dep.global+'/100'));
+    dMain.appendChild(h('p',{style:{fontSize:'0.8rem',fontWeight:'800',color:'#475569'}},dependencyLabel(dep.global)));
+    dMain.appendChild(h('p',{style:{fontSize:'0.68rem',color:'#94a3b8',marginTop:'0.5rem'}},dep.count+' item'+(dep.count>1?'s':'')+' cotés avec niveau d’aide renseigné'));
+    dGrid.appendChild(dMain);
+    var dList=h('div');
+    dep.domains.forEach(function(d){
+      var row=h('div',{style:{display:'grid',gridTemplateColumns:'minmax(130px,1fr) 2fr 70px',gap:'0.7rem',alignItems:'center',marginBottom:'0.55rem'}});
+      row.appendChild(h('span',{style:{fontSize:'0.7rem',fontWeight:'700',color:'#475569'}},d.title));
+      var tr=h('div',{className:'progress-track',style:{height:'7px'}});
+      tr.appendChild(h('div',{className:'progress-fill',style:{height:'7px',width:(d.score===null?0:d.score)+'%',background:d.score===null?'#cbd5e1':d.score>=60?'#ef4444':d.score>=40?'#f59e0b':'#22c55e'}}));
+      row.appendChild(tr);
+      row.appendChild(h('span',{style:{fontSize:'0.68rem',fontWeight:'800',color:'#334155',textAlign:'right'}},d.score===null?'NR':d.score+'/100'));
+      dList.appendChild(row);
+    });
+    dGrid.appendChild(dList); body.appendChild(dGrid);
+    body.appendChild(h('p',{style:{fontSize:'0.68rem',color:'#64748b',marginTop:'1rem',lineHeight:'1.6',fontStyle:'italic'}},
+      "Indicateur interne descriptif, non validé cliniquement. Pondération : Sans aide 0 · Matériel seul 20 · Remédiation spécifique 40 · Aide humaine ponctuelle 60 · Aide humaine constante 100. Il complète le score fonctionnel sans le modifier."));
+  }));
+
   // Clinical impacts
   wrap.appendChild(hCard("Impacts Cliniques Multidimensionnels","Stethoscope","",function(body){
     var g = h('div',{className:'grid-4'});
@@ -1311,13 +1550,13 @@ render(); window.scrollTo(0,0);
 
   DOMAINS.forEach(function(domain) {
     var ds = sc.domains.find(function(d){ return d.id===domain.id; });
-    var pct = Math.round(ds.percent);
-    var pctColor = pct>=70?'#16a34a':pct<40?'#dc2626':'#b45309';
+    var pct = (ds && ds.percent !== null && ds.percent !== undefined) ? Math.round(ds.percent) : null;
+    var pctColor = pct===null?'#94a3b8':pct>=70?'#16a34a':pct<40?'#dc2626':'#b45309';
 
     var domWrap = h('div',{style:{border:'2px solid #e2e8f0',borderRadius:'1.5rem',overflow:'hidden',marginBottom:'1.5rem',background:'#fff',boxShadow:'0 1px 3px rgba(0,0,0,0.05)'}});
     var domHead = h('div',{style:{background:'#0f172a',color:'#fff',padding:'1rem 2rem',display:'flex',justifyContent:'space-between',alignItems:'center'}});
     domHead.appendChild(h('span',{style:{fontWeight:'900',textTransform:'uppercase',letterSpacing:'0.05em',fontSize:'0.8rem'}},domain.title));
-    var badge = h('span',{style:{fontSize:'0.65rem',padding:'0.2rem 0.75rem',borderRadius:'9999px',fontWeight:'700',background:'rgba(255,255,255,0.1)',color:pct>=70?'#4ade80':pct<40?'#f87171':'#fbbf24'}},"Score\u00a0: "+pct+"%");
+    var badge = h('span',{style:{fontSize:'0.65rem',padding:'0.2rem 0.75rem',borderRadius:'9999px',fontWeight:'700',background:'rgba(255,255,255,0.1)',color:pct===null?'#cbd5e1':pct>=70?'#4ade80':pct<40?'#f87171':'#fbbf24'}},pct===null?"Score\u00a0: NR":"Score\u00a0: "+pct+"%");
     domHead.appendChild(badge);
     domWrap.appendChild(domHead);
 
@@ -1339,7 +1578,7 @@ render(); window.scrollTo(0,0);
       var tr = h('tr');
 
       var td1 = h('td');
-      td1.appendChild(h('span',{style:{fontWeight:'700',fontSize:'0.85rem',color:'#1e293b'}},item.label));
+      td1.appendChild(h('span',{style:{fontWeight:'700',fontSize:'0.85rem',color:'#1e293b'}},(res.priority?'★ ':'')+item.label));
       td1.appendChild(h('br'));
       td1.appendChild(h('span',{style:{fontSize:'0.65rem',color:'#94a3b8',fontStyle:'italic'}},item.help));
       tr.appendChild(td1);
@@ -1350,14 +1589,15 @@ render(); window.scrollTo(0,0);
         if (res.score === 0) scoreCls = 'score-0';
         else if (res.score === 1) scoreCls = 'score-1';
         else if (res.score === 2) scoreCls = 'score-2';
-        else scoreCls = 'score-3';
+        else if (res.score === 3) scoreCls = 'score-3';
+        else if (res.score === 4) scoreCls = 'score-4';
       }
-      var scoreEl = h('div',{className:'score-badge '+scoreCls}, res.score!==undefined?''+res.score:'—');
+      var scoreEl = h('div',{className:'score-badge '+scoreCls}, res.notApplicable?'N/A':(res.score!==undefined?''+res.score:'—'));
       td2.appendChild(scoreEl);
       tr.appendChild(td2);
 
       tr.appendChild(h('td',{style:{fontSize:'0.7rem',fontWeight:'700',textTransform:'uppercase',textAlign:'center',color:'#475569',lineHeight:'1.3'}},res.help||'—'));
-      tr.appendChild(h('td',{style:{fontSize:'0.75rem',color:'#475569',fontStyle:'italic',lineHeight:'1.5'}},res.comment||'—'));
+      tr.appendChild(h('td',{style:{fontSize:'0.75rem',color:'#475569',fontStyle:'italic',lineHeight:'1.5'}},(res.context?'['+res.context+'] ':'')+(res.comment||'—')));
       tbody.appendChild(tr);
     });
     tbl.appendChild(tbody);
@@ -1383,32 +1623,32 @@ render(); window.scrollTo(0,0);
 
   // Helper: build context from current state
   function buildPromptContext() {
-    var pSc = calcScores();
+    var pSc = calcScores(), comp=getCompletionStats(), tri=getItemSummaries();
     var ctx = '';
     ctx += 'DOSSIER : ' + (state.info.code||'Anonyme') + '\n';
     ctx += 'NIVEAU SCOLAIRE : ' + (state.info.level||'Non renseigné') + '\n';
-    ctx += 'PROFIL INTERVENANT : ' + (state.info.profile||'Non renseigné') + '\n\n';
+    ctx += 'PROFIL INTERVENANT : ' + (state.info.profile||'Non renseigné') + '\n';
+    ctx += 'DATE DE L’OBSERVATION : ' + (state.info.observationDate||'Non renseignée') + '\n';
+    ctx += 'COMPLÉTUDE : '+comp.completed+'/'+comp.total+' ('+comp.percent+'%) ; '+comp.nonObserved+' non observés ; '+comp.notApplicable+' non applicables ; '+comp.unanswered+' sans réponse.\n';
+    var depCtx=getHelpDependencyStats();
+    ctx += 'INDICE DESCRIPTIF DE DÉPENDANCE AUX AIDES : '+(depCtx.global===null?'NR':depCtx.global+'/100 ('+dependencyLabel(depCtx.global)+')')+'. Indicateur interne non validé cliniquement.\n\n';
     ctx += 'IMPACTS CLINIQUES :\n';
     ctx += '- Plan Moteur : ' + (state.info.impactMoteur||'Non renseigné') + '\n';
     ctx += '- Plan Cognitif/DYS : ' + (state.info.impactCognitif||'Non renseigné') + '\n';
     ctx += '- Plan Scolaire : ' + (state.info.impactScolaire||'Non renseigné') + '\n';
     ctx += '- Plan Relationnel : ' + (state.info.impactRelationnel||'Non renseigné') + '\n\n';
-    ctx += 'SCORES PAR DOMAINE :\n';
-    pSc.domains.forEach(function(d){ ctx += '- ' + d.title + ' : ' + Math.round(d.percent) + '%\n'; });
-    var weak = pSc.domains.filter(function(d){return d.percent<50;});
-    if (weak.length > 0) {
-      ctx += '\nDOMAINES FRAGILISÉS (<50%) : ' + weak.map(function(d){return d.title + ' (' + Math.round(d.percent) + '%)'}).join(', ') + '\n';
-    }
-    var strong = pSc.domains.filter(function(d){return d.percent>=70;});
-    if (strong.length > 0) {
-      ctx += 'POINTS FORTS (\u226570%) : ' + strong.map(function(d){return d.title + ' (' + Math.round(d.percent) + '%)'}).join(', ') + '\n';
-    }
-    // Help levels summary
-    var helpCts = {};
-    ['Sans aide','Matériel seul','Aide humaine ponctuelle','Aide humaine constante','Rémédiation spécifique'].forEach(function(hl){helpCts[hl]=0;});
-    Object.values(state.responses).forEach(function(r){if(r&&r.help&&helpCts[r.help]!==undefined)helpCts[r.help]++;});
-    ctx += '\nRÉPARTITION DES AIDES REQUISES :\n';
-    Object.keys(helpCts).forEach(function(k){ if(helpCts[k]>0) ctx += '- ' + k + ' : ' + helpCts[k] + ' item(s)\n'; });
+    ctx += 'SCORES PAR DOMAINE (les non observés et N/A sont exclus) :\n';
+    pSc.domains.forEach(function(d){ ctx += '- ' + d.title + ' : ' + (d.percent===null?'NR':Math.round(d.percent)+'%') + ' ('+d.answered+' items cotés)\n'; });
+    var weak = pSc.domains.filter(function(d){return d.percent!==null&&d.percent<50;});
+    if (weak.length) ctx += '\nDOMAINES FRAGILISÉS (<50%) : ' + weak.map(function(d){return d.title + ' (' + Math.round(d.percent) + '%)'}).join(', ') + '\n';
+    var strong = pSc.domains.filter(function(d){return d.percent!==null&&d.percent>=70;});
+    if (strong.length) ctx += 'POINTS FORTS (≥70%) : ' + strong.map(function(d){return d.title + ' (' + Math.round(d.percent) + '%)'}).join(', ') + '\n';
+    if(tri.priorities.length) ctx+='\nITEMS MARQUÉS PRIORITAIRES :\n'+tri.priorities.map(function(x){return '- '+x.label+' ['+x.domain+'] score '+x.score+(x.context?' — contexte: '+x.context:'')+(x.comment?' — '+x.comment:'');}).join('\n')+'\n';
+    ctx+='\nDÉTAIL DES ITEMS RENSEIGNÉS :\n';
+    DOMAINS.forEach(function(d){ d.items.forEach(function(item){
+      var r=state.responses[item.id]; if(!r)return;
+      ctx+='- '+item.label+' ['+d.title+'] : '+(r.notApplicable?'Non applicable':r.score===0?'Non observé':(r.score>=1?'Score '+r.score+'/4':'Sans score'))+(r.priority?' | PRIORITAIRE':'')+(r.help?' | aide: '+r.help:'')+(r.context?' | contexte: '+r.context:'')+(r.comment?' | observation: '+r.comment:'')+'\n';
+    });});
     return ctx;
   }
 
@@ -1498,7 +1738,7 @@ render(); window.scrollTo(0,0);
     function() {
       var ctx = buildPromptContext();
       var pSc2 = calcScores();
-      var weakDomains = pSc2.domains.filter(function(d){return d.percent<50;}).map(function(d){return d.title;}).join(', ');
+      var weakDomains = pSc2.domains.filter(function(d){return d.percent!==null&&d.percent<50;}).map(function(d){return d.title;}).join(', ');
       return 'Tu es un expert pédagogique spécialisé en inclusion scolaire (contexte FWB belge). Sur base des données d’observation ci-dessous, formule des objectifs SMART pour cet élève. Les objectifs doivent :\n- Être au nombre de 3 à 5\n- Être directement liés aux domaines fragilisés suivants : ' + (weakDomains||'domaines identifiés dans les scores') + '\n- Respecter le format SMART : Spécifique, Mesurable, Atteignable, Réaliste, Temporellement défini\n- Être formulés de manière positive et centrée sur les compétences\n- Inclure pour chaque objectif : l’intitulé, les indicateurs de mesure, les moyens/aménagements associés, et un délai réaliste\n\n--- DONNÉES D’OBSERVATION ---\n' + ctx;
     }
   ));
@@ -1526,10 +1766,12 @@ render(); window.scrollTo(0,0);
 
 // ─── DEMO DATA ────────────────────────────────────────────────────────────────
 function loadDemoData() {
+  state.currentDraftId = makeDraftId();
   // Données fictives : élève TDI + TDAH, cycle secondaire
   state.info = {
     code: 'DEMO-2025-001',
     profile: 'Éducateur',
+    observationDate: todayLocalDate(),
     level: 'Secondaire',
     impactMoteur: 'Fatigue musculaire rapide lors des déplacements longs. Difficultés à maintenir une posture assise prolongée au-delà de 45 min. Utilise un coussin ergonomique. Pas de fauteuil roulant mais marche ralentie.',
     impactCognitif: 'TDAH de type combiné. Difficultés majeures de maintien attentionnel et d’inhibition des réponses impulsives. Dysorthographie associée. Mémoire de travail réduite.',
@@ -1565,7 +1807,7 @@ function loadDemoData() {
     d1_7:'Aide humaine ponctuelle', d1_8:'Aide humaine ponctuelle',
     d2_2:'Aide humaine constante', d2_4:'Matériel seul', d2_6:'Aide humaine constante',
     d3_1:'Aide humaine constante', d3_3:'Aide humaine constante', d3_8:'Matériel seul',
-    d4_4:'Matériel seul', d4_9:'Aménagements pédagogiques',
+    d4_4:'Matériel seul', d4_9:'Remédiation spécifique',
     d5_6:'Aide humaine ponctuelle',
     d6_4:'Aide humaine ponctuelle', d6_6:'Aide humaine ponctuelle',
     d7_1:'Aide humaine ponctuelle', d7_2:'Aide humaine ponctuelle',
@@ -1686,6 +1928,10 @@ window.addEventListener('afterprint', function() {
   // Restore responsive charts after print
   setTimeout(function(){ drawChart(); drawAideChart(); }, 100);
 });
+
+// Autosauvegarde globale des brouillons : la saisie est conservée sans action manuelle.
+document.addEventListener('input', function(){ saveCurrentDraft(); });
+document.addEventListener('change', function(){ saveCurrentDraft(); });
 
 // Boot
 document.addEventListener('DOMContentLoaded', render);
