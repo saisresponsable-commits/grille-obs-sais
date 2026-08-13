@@ -1073,9 +1073,11 @@ function renderWelcome(root) {
   var startBtn = hBtn([hIcon('ChevronRight',20), " Nouvelle observation"], "btn-primary btn-lg", startNewDraft);
   startBtn.style.flex = '1';
 
-  var loadLabel = h('label', { htmlFor:'load-file', style:{flex:'1'} });
-  var loadBtn = hBtn([hIcon('Upload',18), " Charger un projet"], "btn-outline btn-lg", null);
+  var loadLabel = h('label', { htmlFor:'load-file', style:{flex:'1',display:'flex',margin:'0'} });
+  var loadBtn = hBtn([hIcon('Upload',20), " Charger un projet"], "btn-outline btn-lg", null);
   loadBtn.style.width = '100%';
+  loadBtn.style.height = '100%';
+  loadBtn.style.flex = '1';
   loadBtn.onclick = function(){ document.getElementById('load-file').click(); };
   var fileInput = h('input', { type:'file', id:'load-file', accept:'.json', style:{display:'none'}, onChange:function(e){ if(e.target.files[0]){ loadProject(e.target.files[0]); e.target.value=''; } } });
   loadLabel.appendChild(loadBtn);
