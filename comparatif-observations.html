@@ -293,6 +293,39 @@ body {
 .consensus-label { width: 9rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .consensus-bar-wrap { flex: 1; }
 
+
+/* ── Export & prompt tools ── */
+.action-bar {
+  display:flex;
+  flex-wrap:wrap;
+  gap:0.75rem;
+  margin:0 0 2rem;
+  padding:1rem;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  box-shadow:0 1px 4px rgba(0,0,0,0.06);
+}
+.prompt-card { margin-bottom:1rem; }
+.prompt-desc { font-size:0.82rem; color:var(--muted); margin-bottom:1rem; line-height:1.6; }
+.prompt-textarea {
+  width:100%;
+  min-height:230px;
+  padding:0.9rem;
+  border:1px solid var(--border);
+  border-radius:0.6rem;
+  background:var(--surface2);
+  color:var(--text);
+  font-family:'DM Mono', monospace;
+  font-size:0.75rem;
+  line-height:1.65;
+  resize:vertical;
+  display:none;
+}
+.prompt-actions { display:flex; flex-wrap:wrap; gap:0.75rem; margin-top:0.75rem; }
+.btn-success { background:#16a34a; color:#fff; box-shadow:0 2px 8px rgba(22,163,74,0.22); }
+.btn-success:hover:not(:disabled) { background:#15803d; transform:translateY(-1px); }
+
 /* ── Print ── */
 @media print {
   .no-print { display: none !important; }
@@ -496,6 +529,9 @@ function render() {
   // ── Statistiques globales
   renderStats(root);
 
+  // ── Export / impression
+  renderActionBar(root);
+
   // ── Radar + tableau
   var radarTitle = document.createElement('p');
   radarTitle.className = 'section-title';
@@ -542,11 +578,19 @@ function render() {
 
   renderDivergences(root);
 
-  // ── Synthèse IA
+  // ── Générateurs de prompts (traitement local)
+  var promptTitle = document.createElement('p');
+  promptTitle.className = 'section-title';
+  promptTitle.style.marginTop = '2rem';
+  promptTitle.textContent = 'Générateurs de prompts à partir du croisement';
+  root.appendChild(promptTitle);
+  renderPromptGenerators(root);
+
+  // ── Synthèse IA directe (optionnelle)
   var aiTitle = document.createElement('p');
   aiTitle.className = 'section-title';
   aiTitle.style.marginTop = '2rem';
-  aiTitle.textContent = 'Synthèse IA des convergences & divergences';
+  aiTitle.textContent = 'Synthèse directe via Claude — optionnelle';
   root.appendChild(aiTitle);
 
   renderAI(root);
@@ -602,6 +646,260 @@ function renderStats(root) {
 
   root.appendChild(row);
 }
+
+
+// ── Export / impression ──────────────────────────────────────────────────────
+function renderActionBar(root) {
+  var bar = document.createElement('div');
+  bar.className = 'action-bar no-print';
+
+  var exportBtn = document.createElement('button');
+  exportBtn.className = 'btn btn-success';
+  exportBtn.textContent = '💾 Exporter le croisement (.json)';
+  exportBtn.addEventListener('click', exportComparisonJSON);
+
+  var printBtn = document.createElement('button');
+  printBtn.className = 'btn btn-primary';
+  printBtn.textContent = '🖨️ Imprimer / PDF';
+  printBtn.addEventListener('click', function(){ window.print(); });
+
+  bar.appendChild(exportBtn);
+  bar.appendChild(printBtn);
+  root.appendChild(bar);
+}
+
+function getConsensusStats() {
+  var consensusCount = 0, comparableCount = 0;
+  DOMAINS.forEach(function(d){
+    d.items.forEach(function(id){
+      var sc = observers.map(function(o){
+        var r = o.responses[id];
+        return (r && r.score !== undefined) ? r.score : null;
+      }).filter(function(s){ return s !== null; });
+      if (sc.length >= 2) {
+        comparableCount++;
+        if (Math.max.apply(null,sc) - Math.min.apply(null,sc) === 0) consensusCount++;
+      }
+    });
+  });
+  return {
+    comparableItems: comparableCount,
+    exactConsensusItems: consensusCount,
+    consensusPercent: comparableCount ? Math.round(consensusCount/comparableCount*100) : 0
+  };
+}
+
+function buildComparisonData() {
+  var domains = DOMAINS.map(function(domain){
+    var perObserver = observers.map(function(obs){
+      return {
+        label: obs.label,
+        profile: obs.profile,
+        scorePercent: calcDomainScore(obs.responses, domain.items)
+      };
+    });
+    var vals = perObserver.map(function(x){ return x.scorePercent; }).filter(function(v){ return v !== null; });
+    return {
+      id: domain.id,
+      title: domain.title,
+      scores: perObserver,
+      meanPercent: vals.length ? Math.round(vals.reduce(function(a,b){return a+b;},0)/vals.length) : null,
+      rangePercent: vals.length ? Math.max.apply(null,vals) - Math.min.apply(null,vals) : null
+    };
+  });
+
+  return {
+    type: 'sais-comparative-observation',
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    observerCount: observers.length,
+    dossierCodes: Array.from(new Set(observers.map(function(o){ return o.code; }).filter(Boolean))),
+    schoolLevels: Array.from(new Set(observers.map(function(o){ return o.level; }).filter(Boolean))),
+    observers: observers.map(function(obs){
+      return {
+        label: obs.label,
+        profile: obs.profile,
+        code: obs.code,
+        level: obs.level,
+        info: obs.info || {},
+        responses: obs.responses
+      };
+    }),
+    domainComparison: domains,
+    divergences: getDivergences(),
+    consensus: getConsensusStats()
+  };
+}
+
+function exportComparisonJSON() {
+  try {
+    var data = buildComparisonData();
+    var code = (data.dossierCodes && data.dossierCodes.length === 1) ? data.dossierCodes[0] : 'multi';
+    var blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'comparatif_' + code + '_' + new Date().toISOString().slice(0,10) + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch(e) {
+    errorMsg = 'Erreur lors de l’export : ' + e.message;
+    render();
+  }
+}
+
+// ── Contexte textuel du croisement ───────────────────────────────────────────
+function buildComparisonPromptContext() {
+  var data = buildComparisonData();
+  var ctx = '';
+  ctx += '=== ANALYSE COMPARATIVE MULTI-OBSERVATEURS ===\n\n';
+  ctx += 'NOMBRE D’OBSERVATEURS : ' + data.observerCount + '\n';
+  ctx += 'DOSSIER(S) : ' + (data.dossierCodes.length ? data.dossierCodes.join(', ') : 'Non renseigné') + '\n';
+  ctx += 'NIVEAU(X) SCOLAIRE(S) : ' + (data.schoolLevels.length ? data.schoolLevels.join(', ') : 'Non renseigné') + '\n';
+  ctx += 'PROFILS : ' + observers.map(function(o){ return o.profile || 'Non renseigné'; }).join(', ') + '\n\n';
+
+  ctx += 'IMPACTS CLINIQUES RAPPORTÉS PAR OBSERVATEUR :\n';
+  observers.forEach(function(obs){
+    var inf = obs.info || {};
+    ctx += '\n[' + obs.label + ']\n';
+    ctx += '- Plan Moteur : ' + (inf.impactMoteur || 'Non renseigné') + '\n';
+    ctx += '- Plan Cognitif/DYS : ' + (inf.impactCognitif || 'Non renseigné') + '\n';
+    ctx += '- Plan Scolaire : ' + (inf.impactScolaire || 'Non renseigné') + '\n';
+    ctx += '- Plan Relationnel : ' + (inf.impactRelationnel || 'Non renseigné') + '\n';
+  });
+
+  ctx += '\nSCORES COMPARATIFS PAR DOMAINE :\n';
+  data.domainComparison.forEach(function(d){
+    ctx += '- ' + d.title + ' : ';
+    ctx += d.scores.map(function(s){
+      return s.label + ' = ' + (s.scorePercent !== null ? s.scorePercent + '%' : 'NR');
+    }).join(' | ');
+    ctx += ' | moyenne = ' + (d.meanPercent !== null ? d.meanPercent + '%' : 'NR');
+    ctx += ' | amplitude = ' + (d.rangePercent !== null ? d.rangePercent + ' pts' : 'NR') + '\n';
+  });
+
+  ctx += '\nCONSENSUS : ' + data.consensus.consensusPercent + '% d’items en accord exact (' +
+    data.consensus.exactConsensusItems + '/' + data.consensus.comparableItems + ' items comparables).\n';
+
+  if (data.divergences.length) {
+    ctx += '\nDIVERGENCES MAJEURES (écart ≥ 2 points sur l’échelle 0-4) :\n';
+    data.divergences.slice(0,20).forEach(function(d){
+      ctx += '- ' + d.label + ' [' + d.domain + '] — écart ' + d.ecart + ' : ';
+      ctx += d.scores.filter(function(s){return s.score !== null;}).map(function(s){
+        return s.label + '=' + s.score + '/4';
+      }).join(' | ') + '\n';
+    });
+  } else {
+    ctx += '\nDIVERGENCES MAJEURES : aucune divergence ≥ 2 points.\n';
+  }
+
+  return ctx;
+}
+
+function makeComparisonPromptCard(title, description, buildPrompt) {
+  var card = document.createElement('div');
+  card.className = 'card prompt-card';
+
+  var hdr = document.createElement('div');
+  hdr.className = 'card-header';
+  hdr.textContent = title;
+  card.appendChild(hdr);
+
+  var body = document.createElement('div');
+  body.className = 'card-body';
+
+  var desc = document.createElement('p');
+  desc.className = 'prompt-desc';
+  desc.textContent = description;
+  body.appendChild(desc);
+
+  var ta = document.createElement('textarea');
+  ta.className = 'prompt-textarea';
+  ta.readOnly = false;
+  body.appendChild(ta);
+
+  var actions = document.createElement('div');
+  actions.className = 'prompt-actions no-print';
+
+  var gen = document.createElement('button');
+  gen.className = 'btn btn-primary';
+  gen.textContent = '✨ Générer le prompt';
+
+  var copy = document.createElement('button');
+  copy.className = 'btn btn-ghost';
+  copy.textContent = '📋 Copier';
+  copy.style.display = 'none';
+
+  gen.addEventListener('click', function(){
+    ta.value = buildPrompt();
+    ta.style.display = 'block';
+    copy.style.display = 'inline-flex';
+    gen.textContent = '↻ Regénérer';
+  });
+
+  copy.addEventListener('click', function(){
+    var done = function(){
+      copy.textContent = '✓ Copié';
+      setTimeout(function(){ copy.textContent = '📋 Copier'; }, 1600);
+    };
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(ta.value).then(done).catch(function(){
+        ta.select(); document.execCommand('copy'); done();
+      });
+    } else {
+      ta.select(); document.execCommand('copy'); done();
+    }
+  });
+
+  actions.appendChild(gen);
+  actions.appendChild(copy);
+  body.appendChild(actions);
+  card.appendChild(body);
+  return card;
+}
+
+function renderPromptGenerators(root) {
+  var intro = document.createElement('div');
+  intro.className = 'alert alert-blue no-print';
+  intro.style.marginBottom = '1rem';
+  intro.innerHTML = 'ℹ️ Les données sont structurées <strong>localement dans le navigateur</strong>. Le bouton génère seulement un texte à copier dans ChatGPT, Claude, Gemini ou une autre IA.';
+  root.appendChild(intro);
+
+  root.appendChild(makeComparisonPromptCard(
+    '1 — Synthèse clinique comparative',
+    'Construit un prompt qui exploite les convergences, les divergences, les impacts cliniques et les scores croisés.',
+    function(){
+      return 'Tu es un expert en handicap et en éducation inclusive francophone, dans le contexte de la Fédération Wallonie-Bruxelles. À partir des observations croisées ci-dessous, rédige une synthèse clinique comparative professionnelle en français.\\n\\nLa synthèse doit :\\n- distinguer clairement les points de convergence et de divergence entre observateurs ;\\n- intégrer les impacts moteurs, cognitifs/DYS, scolaires et relationnels ;\\n- considérer la variabilité des observations comme une donnée clinique et contextuelle, sans chercher artificiellement à trancher ;\\n- identifier les forces, fragilités et besoins prioritaires ;\\n- proposer 3 à 5 pistes de concertation ou d’ajustement pour l’équipe ;\\n- employer un ton neutre, professionnel, nuancé et centré sur le fonctionnement de l’élève ;\\n- être structurée avec des sous-titres clairs et faire environ 500 à 700 mots.\\n\\n--- DONNÉES CROISÉES ---\\n' + buildComparisonPromptContext();
+    }
+  ));
+
+  root.appendChild(makeComparisonPromptCard(
+    '2 — Objectifs SMART issus du croisement',
+    'Construit un prompt pour transformer les besoins communs et les divergences pertinentes en objectifs opérationnels d’équipe.',
+    function(){
+      return 'Tu es un expert pédagogique spécialisé en inclusion scolaire, dans le contexte de la Fédération Wallonie-Bruxelles. À partir des observations croisées ci-dessous, formule 3 à 5 objectifs SMART prioritaires pour le projet scolaire de l’élève.\\n\\nConsignes :\\n- fonde les objectifs d’abord sur les besoins convergents ;\\n- lorsqu’une divergence est importante, transforme-la si pertinent en objectif d’observation partagée ou d’harmonisation des pratiques ;\\n- respecte le format SMART : Spécifique, Mesurable, Atteignable, Réaliste/Pertinent et Temporellement défini ;\\n- pour chaque objectif, indique : intitulé, justification par les données croisées, indicateur(s) mesurable(s), moyens/aménagements, acteurs concernés, échéance et modalité de réévaluation ;\\n- évite les objectifs génériques ou centrés uniquement sur le déficit ;\\n- distingue si nécessaire les objectifs concernant directement l’élève de ceux concernant l’environnement ou l’équipe.\\n\\n--- DONNÉES CROISÉES ---\\n' + buildComparisonPromptContext();
+    }
+  ));
+
+  root.appendChild(makeComparisonPromptCard(
+    '3 — Aménagements raisonnables à partir des regards croisés',
+    'Construit un prompt pour proposer des aménagements en tenant compte du consensus, des contextes d’observation et de leur faisabilité.',
+    function(){
+      return 'Tu es un expert en aménagements raisonnables dans le cadre de l’enseignement en Fédération Wallonie-Bruxelles. À partir des observations croisées ci-dessous, identifie les aménagements raisonnables les plus appropriés pour cet élève.\\n\\nOrganise la réponse selon les catégories suivantes :\\n1. Aménagements matériels\\n2. Aménagements organisationnels\\n3. Aménagements pédagogiques\\n4. Aménagements humains\\n5. Aménagements environnementaux\\n\\nPour chaque proposition, précise :\\n- l’aménagement concret ;\\n- le besoin auquel il répond ;\\n- les observations convergentes ou divergentes qui le justifient ;\\n- les acteurs concernés ;\\n- les contextes ou moments où il est prioritaire ;\\n- un critère simple permettant d’évaluer son efficacité après mise en place.\\n\\nNe présente pas comme certain ce que les données croisées ne permettent pas d’établir. Signale les points qui nécessitent encore une observation concertée.\\n\\n--- DONNÉES CROISÉES ---\\n' + buildComparisonPromptContext();
+    }
+  ));
+
+  root.appendChild(makeComparisonPromptCard(
+    '4 — Plan d’action pluridisciplinaire',
+    'Construit un prompt de plan d’action concret pour la réunion de concertation : priorités, responsables, échéances et critères de suivi.',
+    function(){
+      return 'Tu es un coordinateur de projet spécialisé en inclusion scolaire. Sur base des observations croisées ci-dessous, construis un plan d’action pluridisciplinaire directement utilisable en réunion de concertation.\\n\\nPrésente :\\n- 3 à 5 priorités classées par ordre d’importance ;\\n- pour chaque priorité : constat partagé, objectif visé, actions concrètes, responsable(s), fréquence/délai, indicateurs de réussite ;\\n- les divergences qui doivent faire l’objet d’une observation ciblée plutôt que d’une décision immédiate ;\\n- les informations manquantes à récolter ;\\n- une proposition de date ou de délai de réévaluation du plan.\\n\\nLe plan doit être réaliste, opérationnel, lisible par l’école, la famille et les professionnels du SAIs.\\n\\n--- DONNÉES CROISÉES ---\\n' + buildComparisonPromptContext();
+    }
+  ));
+}
+
 
 // ── Tableau domaines ─────────────────────────────────────────────────────────
 function buildDomainTable() {
@@ -739,7 +1037,7 @@ function renderAI(root) {
 
   var hdr = document.createElement('div');
   hdr.className = 'card-header';
-  hdr.innerHTML = '🤖 Synthèse IA narrative';
+  hdr.innerHTML = '🤖 Synthèse directe via Claude (optionnelle)';
   card.appendChild(hdr);
 
   var body = document.createElement('div');
@@ -749,7 +1047,7 @@ function renderAI(root) {
     var info = document.createElement('div');
     info.className = 'alert alert-blue';
     info.style.marginBottom = '1rem';
-    info.innerHTML = 'ℹ️ Claude va analyser les convergences, divergences et formuler des recommandations basées sur les ' + observers.length + ' observations.';
+    info.innerHTML = 'ℹ️ Option facultative : vous pouvez demander une synthèse directement à Claude. Les générateurs de prompts ci-dessus fonctionnent localement et ne nécessitent aucun envoi automatique.';
     body.appendChild(info);
 
     var btn = document.createElement('button');
