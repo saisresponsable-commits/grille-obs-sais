@@ -472,11 +472,141 @@ var state = {
   errorMsg: '',
   saveError: '',
   showConfirmReset: false,
-  chartInstance: null
+  chartInstance: null,
+  currentDraftId: null
 };
+
+
+// ─── BROUILLONS LOCAUX ────────────────────────────────────────────────────────
+// Les brouillons restent uniquement dans le navigateur de cet appareil.
+var DRAFTS_STORAGE_KEY = 'sais_observation_drafts_v1';
+
+function emptyInfo() {
+  return { code:'', profile:'', level:'', impactMoteur:'', impactCognitif:'', impactScolaire:'', impactRelationnel:'' };
+}
+
+function getDrafts() {
+  try {
+    var raw = localStorage.getItem(DRAFTS_STORAGE_KEY);
+    var drafts = raw ? JSON.parse(raw) : [];
+    return Array.isArray(drafts) ? drafts : [];
+  } catch(e) {
+    return [];
+  }
+}
+
+function writeDrafts(drafts) {
+  try {
+    localStorage.setItem(DRAFTS_STORAGE_KEY, JSON.stringify(drafts));
+    return true;
+  } catch(e) {
+    state.saveError = "La sauvegarde automatique locale est indisponible sur ce navigateur.";
+    return false;
+  }
+}
+
+function makeDraftId() {
+  return 'draft_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+}
+
+function draftProgress() {
+  var total = 0, answered = 0;
+  DOMAINS.forEach(function(d){
+    d.items.forEach(function(item){
+      total++;
+      var r = state.responses[item.id];
+      if (r && r.score !== undefined && r.score !== null) answered++;
+    });
+  });
+  return { answered:answered, total:total, percent:total ? Math.round(answered/total*100) : 0 };
+}
+
+function hasDraftContent() {
+  if (state.step === 'welcome' || !state.currentDraftId) return false;
+  if ((state.info.code||'').trim() || state.info.profile || state.info.level) return true;
+  if (Object.keys(state.responses||{}).length) return true;
+  return !!(state.info.impactMoteur || state.info.impactCognitif || state.info.impactScolaire || state.info.impactRelationnel);
+}
+
+function saveCurrentDraft() {
+  if (!hasDraftContent()) return;
+  var drafts = getDrafts();
+  var idx = drafts.findIndex(function(d){ return d.id === state.currentDraftId; });
+  var now = new Date().toISOString();
+  var progress = draftProgress();
+  var item = {
+    id: state.currentDraftId,
+    createdAt: idx >= 0 && drafts[idx].createdAt ? drafts[idx].createdAt : now,
+    updatedAt: now,
+    info: JSON.parse(JSON.stringify(state.info)),
+    responses: JSON.parse(JSON.stringify(state.responses)),
+    domainIdx: state.domainIdx || 0,
+    step: state.step === 'results' ? 'results' : (state.step === 'observation' ? 'observation' : 'info'),
+    aiSynthesis: state.aiSynthesis || '',
+    aiGoals: state.aiGoals || '',
+    progress: progress
+  };
+  if (idx >= 0) drafts[idx] = item; else drafts.unshift(item);
+  writeDrafts(drafts);
+}
+
+function startNewDraft() {
+  state.info = emptyInfo();
+  state.responses = {};
+  state.domainIdx = 0;
+  state.aiSynthesis = '';
+  state.aiGoals = '';
+  state.errorMsg = '';
+  state.saveError = '';
+  state.showConfirmReset = false;
+  state.currentDraftId = makeDraftId();
+  setState({step:'info'});
+  window.scrollTo(0,0);
+}
+
+function resumeDraft(id) {
+  var draft = getDrafts().find(function(d){ return d.id === id; });
+  if (!draft) { alert("Ce brouillon n’existe plus."); render(); return; }
+  state.currentDraftId = draft.id;
+  state.info = Object.assign(emptyInfo(), draft.info || {});
+  state.responses = draft.responses || {};
+  state.domainIdx = Number.isInteger(draft.domainIdx) ? draft.domainIdx : 0;
+  state.aiSynthesis = draft.aiSynthesis || '';
+  state.aiGoals = draft.aiGoals || '';
+  state.errorMsg = '';
+  state.saveError = '';
+  state.showConfirmReset = false;
+  state.step = draft.step || 'info';
+  render();
+  window.scrollTo(0,0);
+}
+
+function deleteDraft(id) {
+  var drafts = getDrafts().filter(function(d){ return d.id !== id; });
+  writeDrafts(drafts);
+  if (state.currentDraftId === id) state.currentDraftId = null;
+  render();
+}
+
+function deleteCurrentDraft() {
+  if (!state.currentDraftId) return;
+  var id = state.currentDraftId;
+  var drafts = getDrafts().filter(function(d){ return d.id !== id; });
+  writeDrafts(drafts);
+  state.currentDraftId = null;
+}
+
+function formatDraftDate(iso) {
+  try {
+    return new Intl.DateTimeFormat('fr-BE', {dateStyle:'short', timeStyle:'short'}).format(new Date(iso));
+  } catch(e) {
+    return new Date(iso).toLocaleString();
+  }
+}
 
 function setState(patch) {
   Object.assign(state, patch);
+  saveCurrentDraft();
   render();
 }
 
@@ -540,7 +670,7 @@ function callGemini(prompt, sysInstruction, onSuccess, onError) {
 // ─── SAVE / LOAD ──────────────────────────────────────────────────────────────
 function saveProject() {
   try {
-    var data = JSON.stringify({ info:state.info, responses:state.responses, aiSynthesis:state.aiSynthesis, aiGoals:state.aiGoals, timestamp:new Date().toISOString() }, null, 2);
+    var data = JSON.stringify({ info:state.info, responses:state.responses, aiSynthesis:state.aiSynthesis, aiGoals:state.aiGoals, domainIdx:state.domainIdx, step:state.step, timestamp:new Date().toISOString() }, null, 2);
     var blob = new Blob([data], { type:'application/json' });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
@@ -556,7 +686,8 @@ function loadProject(file) {
     try {
       var data = JSON.parse(ev.target.result);
       if (!data || !data.info || !data.responses) throw new Error("Fichier invalide.");
-      setState({ info:Object.assign({ code:'',profile:'',level:'',impactMoteur:'',impactCognitif:'',impactScolaire:'',impactRelationnel:'' }, data.info), responses:data.responses, aiSynthesis:data.aiSynthesis||'', aiGoals:data.aiGoals||'', step:'results', errorMsg:'', saveError:'' });
+      state.currentDraftId = makeDraftId();
+      setState({ info:Object.assign(emptyInfo(), data.info), responses:data.responses, aiSynthesis:data.aiSynthesis||'', aiGoals:data.aiGoals||'', domainIdx:data.domainIdx||0, step:data.step||'results', errorMsg:'', saveError:'' });
     } catch(e) { alert("Impossible de charger: " + e.message); }
   };
   reader.onerror = function(){ alert("Erreur lecture fichier."); };
@@ -726,9 +857,52 @@ function renderWelcome(root) {
   }));
   wrap.appendChild(grid);
 
+  // Brouillons locaux
+  var drafts = getDrafts().sort(function(a,b){ return (b.updatedAt||'').localeCompare(a.updatedAt||''); });
+  if (drafts.length) {
+    var draftCard = h('div', { className:'card mb-8', style:{borderColor:'#bfdbfe'} });
+    var draftHead = h('div', { className:'card-header', style:{justifyContent:'space-between'} });
+    var dhLeft = h('div');
+    dhLeft.appendChild(h('div',{style:{fontWeight:'800',color:'#0f172a'}},'Observations en cours'));
+    dhLeft.appendChild(h('div',{style:{fontSize:'0.72rem',color:'#64748b',marginTop:'0.2rem'}},'Sauvegardées automatiquement sur cet appareil — '+drafts.length+' brouillon'+(drafts.length>1?'s':'')));
+    draftHead.appendChild(dhLeft);
+    draftCard.appendChild(draftHead);
+
+    var draftBody = h('div',{className:'card-body',style:{display:'flex',flexDirection:'column',gap:'0.75rem'}});
+    drafts.forEach(function(draft){
+      var row = h('div',{style:{border:'1px solid #e2e8f0',borderRadius:'0.75rem',padding:'1rem',display:'flex',alignItems:'center',justifyContent:'space-between',gap:'1rem',flexWrap:'wrap'}});
+      var left = h('div',{style:{flex:'1',minWidth:'220px'}});
+      var label = (draft.info && draft.info.code ? draft.info.code : 'Dossier sans identifiant');
+      var meta = [];
+      if (draft.info && draft.info.profile) meta.push(draft.info.profile);
+      if (draft.info && draft.info.level) meta.push(draft.info.level);
+      left.appendChild(h('div',{style:{fontWeight:'800',color:'#1e293b'}},label));
+      left.appendChild(h('div',{style:{fontSize:'0.72rem',color:'#64748b',marginTop:'0.2rem'}},
+        (meta.length?meta.join(' · ')+' · ':'') + 'Dernière sauvegarde : ' + formatDraftDate(draft.updatedAt)));
+      var prog = draft.progress || {answered:0,total:0,percent:0};
+      var pwrap = h('div',{style:{display:'flex',alignItems:'center',gap:'0.6rem',marginTop:'0.55rem'}});
+      var ptr = h('div',{className:'progress-track',style:{height:'5px',flex:'1',maxWidth:'260px'}});
+      ptr.appendChild(h('div',{className:'progress-fill',style:{height:'5px',width:(prog.percent||0)+'%'}}));
+      pwrap.appendChild(ptr);
+      pwrap.appendChild(h('span',{style:{fontSize:'0.68rem',fontWeight:'700',color:'#64748b'}},(prog.percent||0)+'%'));
+      left.appendChild(pwrap);
+      row.appendChild(left);
+
+      var acts = h('div',{style:{display:'flex',gap:'0.5rem',flexWrap:'wrap'}});
+      acts.appendChild(hBtn([hIcon('ChevronRight',16),' Reprendre'],'btn-primary',function(){ resumeDraft(draft.id); }));
+      acts.appendChild(hBtn([hIcon('Trash2',15),' Supprimer'],'btn-danger',function(){
+        if (confirm('Supprimer définitivement ce brouillon local ?')) deleteDraft(draft.id);
+      }));
+      row.appendChild(acts);
+      draftBody.appendChild(row);
+    });
+    draftCard.appendChild(draftBody);
+    wrap.appendChild(draftCard);
+  }
+
   // Action buttons
   var btnRow = h('div', { className:'flex gap-4', style:{flexWrap:'wrap'} });
-  var startBtn = hBtn([hIcon('ChevronRight',20), " D\u00e9marrer l'observation"], "btn-primary btn-lg", function(){ setState({step:'info'}); window.scrollTo(0,0); });
+  var startBtn = hBtn([hIcon('ChevronRight',20), " Nouvelle observation"], "btn-primary btn-lg", startNewDraft);
   startBtn.style.flex = '1';
 
   var loadLabel = h('label', { htmlFor:'load-file', style:{flex:'1'} });
@@ -1015,14 +1189,21 @@ function renderResults(root) {
     wi.style.color='#dc2626'; wi.style.margin='0 auto 1rem';
     modal.appendChild(wi);
     modal.appendChild(h('h3',{style:{fontSize:'1.1rem',fontWeight:'700',marginBottom:'0.5rem'}},"Effacer la session ?"));
-    modal.appendChild(h('p',{style:{color:'#64748b',fontSize:'0.85rem',marginBottom:'1.5rem'}},"Toutes les donn\u00e9es non sauvegard\u00e9es seront perdues."));
+    modal.appendChild(h('p',{style:{color:'#64748b',fontSize:'0.85rem',marginBottom:'1.5rem'}},"Ce brouillon sera supprimé de cet appareil. Les autres observations en cours seront conservées."));
     var mbRow = h('div',{style:{display:'flex',gap:'1rem'}});
     mbRow.appendChild(hBtn("Annuler","btn-outline",function(){ setState({showConfirmReset:false}); },false,false));
     mbRow.appendChild(hBtn("Effacer","btn-danger",function(){
       if (state.chartInstance) { state.chartInstance.destroy(); state.chartInstance = null; }
-      state.responses={}; state.info={code:'',profile:'',level:'',impactMoteur:'',impactCognitif:'',impactScolaire:'',impactRelationnel:''};
+      deleteCurrentDraft();
+      state.responses={}; state.info=emptyInfo();
       state.aiSynthesis=''; state.aiGoals=''; state.errorMsg=''; state.saveError=''; state.domainIdx=0; state.showConfirmReset=false;
-      setState({step:'welcome'}); window.scrollTo(0,0);
+      state.step='welcome'; 
+// Autosauvegarde après chaque saisie/modification.
+// Les handlers des champs mettent d'abord state à jour, puis cet écouteur sauvegarde le brouillon.
+document.addEventListener('input', function(){ saveCurrentDraft(); });
+document.addEventListener('change', function(){ saveCurrentDraft(); });
+
+render(); window.scrollTo(0,0);
     }));
     modal.appendChild(mbRow);
     overlay.appendChild(modal);
