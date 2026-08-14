@@ -758,7 +758,7 @@ function callGemini(prompt, sysInstruction, onSuccess, onError) {
 function buildProjectPayload() {
   return {
     type:'sais-observation',
-    version:2.47,
+    version:2.48,
     info:state.info,
     responses:state.responses,
     aiSynthesis:state.aiSynthesis,
@@ -1682,82 +1682,245 @@ render(); window.scrollTo(0,0);
 
 
 // ─── DEMO DATA ────────────────────────────────────────────────────────────────
-function loadDemoData() {
-  state.currentDraftId = makeDraftId();
-  // Données fictives : élève TDI + TDAH, cycle secondaire
-  state.info = {
-    code: 'DEMO-2025-001',
-    profile: 'Éducateur',
-    observationDate: todayLocalDate(),
-    level: 'Secondaire',
-    impactMoteur: 'Fatigue musculaire rapide lors des déplacements longs. Difficultés à maintenir une posture assise prolongée au-delà de 45 min. Utilise un coussin ergonomique. Pas de fauteuil roulant mais marche ralentie.',
-    impactCognitif: 'TDAH de type combiné. Difficultés majeures de maintien attentionnel et d’inhibition des réponses impulsives. Dysorthographie associée. Mémoire de travail réduite.',
-    impactScolaire: 'Retard scolaire estimé à 1,5 an en lecture/écriture. Mathématiques préservées. Bonne compréhension orale. Production écrite laborieuse et lente.',
-    impactRelationnel: 'Tendance à l’isolement en récréation. Bonnes relations avec 2-3 pairs stables. Réactions émotionnelles parfois disproportionnées face aux conflits ou critiques.'
-  };
 
-  // Scores fictifs pour tous les items
-  var demoScores = {
-    // D1 - Accès physique
-    d1_1:3, d1_2:3, d1_3:2, d1_4:2, d1_5:3, d1_6:3, d1_7:1, d1_8:1,
-    // D2 - Autonomie scolaire
-    d2_1:2, d2_2:1, d2_3:2, d2_4:1, d2_5:3, d2_6:1, d2_7:3, d2_8:3, d2_9:2,
-    // D3 - Capacités exécutives
-    d3_1:1, d3_2:2, d3_3:1, d3_4:1, d3_5:2, d3_6:2, d3_7:1, d3_8:1,
-    // D4 - Capacités pédagogiques
-    d4_1:2, d4_2:3, d4_3:2, d4_4:1, d4_5:3, d4_6:4, d4_7:2, d4_8:2, d4_9:1,
-    // D5 - Participation classe
-    d5_1:2, d5_2:3, d5_3:3, d5_4:2, d5_5:2, d5_6:1,
-    // D6 - Relations sociales
-    d6_1:2, d6_2:2, d6_3:2, d6_4:1, d6_5:2, d6_6:1, d6_7:2,
-    // D7 - Gestion émotionnelle
-    d7_1:1, d7_2:1, d7_3:2, d7_4:3, d7_5:2, d7_6:1,
-    // D8 - Fatigue
-    d8_1:2, d8_2:1, d8_3:2, d8_4:1, d8_5:2,
-    // D9 - Collaboration
-    d9_1:3, d9_2:3, d9_3:2, d9_4:2, d9_5:2,
-    // D10 - Aménagements
-    d10_1:3, d10_2:3, d10_3:3, d10_4:2, d10_5:2
-  };
+var DEMO_PROFILES = [
+  {
+    id:'moteur-leger',
+    title:'Atteinte motrice légère — autonomie élevée',
+    desc:'Difficultés motrices ciblées, légère fatigabilité, autonomie scolaire globalement préservée et peu d’aide.',
+    level:'Primaire',
+    impacts:{
+      impactMoteur:'Atteinte motrice légère avec lenteur dans certains déplacements et fatigabilité modérée lors des journées longues. Motricité fine globalement fonctionnelle.',
+      impactCognitif:'Pas de trouble cognitif majeur identifié. Les stratégies d’organisation sont globalement efficaces.',
+      impactScolaire:'Participation satisfaisante. Quelques adaptations de rythme et de matériel facilitent le quotidien.',
+      impactRelationnel:'Relations sociales adaptées et participation aux activités collectives préservée.'
+    },
+    weakDomains:['D1','D8'], strongDomains:['D6','D7','D9'], helpBias:'low'
+  },
+  {
+    id:'moteur-modere-fatigue',
+    title:'Atteinte motrice modérée — fatigabilité',
+    desc:'Déplacements et manipulations plus coûteux, fatigue ayant des répercussions scolaires et besoin d’aide ponctuelle.',
+    level:'Secondaire',
+    impacts:{
+      impactMoteur:'Atteinte motrice modérée avec fatigabilité importante lors des déplacements, transferts et maintien postural prolongé.',
+      impactCognitif:'Fonctions cognitives globalement préservées. La fatigue peut diminuer l’attention en fin de journée.',
+      impactScolaire:'Rythme ralenti, besoin de pauses et d’adaptations pour limiter le coût énergétique des tâches.',
+      impactRelationnel:'Relations adaptées ; la fatigue peut limiter la participation aux temps informels et aux activités physiques.'
+    },
+    weakDomains:['D1','D2','D8'], strongDomains:['D6','D9'], helpBias:'medium'
+  },
+  {
+    id:'moteur-important-aide',
+    title:'Atteinte motrice importante — aide humaine',
+    desc:'Limitations motrices marquées et aide humaine régulière, avec compétences cognitives et communicationnelles préservées.',
+    level:'Secondaire',
+    impacts:{
+      impactMoteur:'Atteinte motrice importante avec besoin d’aide pour plusieurs déplacements, installations et manipulations. Fatigabilité élevée.',
+      impactCognitif:'Compétences cognitives préservées. Bonne compréhension des situations et des consignes.',
+      impactScolaire:'Réussite possible lorsque l’accessibilité matérielle et l’aide humaine sont disponibles.',
+      impactRelationnel:'Communication efficace et relations sociales satisfaisantes malgré une dépendance physique importante.'
+    },
+    weakDomains:['D1','D2','D8','D10'], strongDomains:['D4','D5','D6','D9'], helpBias:'high'
+  },
+  {
+    id:'moteur-dys',
+    title:'Atteinte motrice + troubles DYS',
+    desc:'Base motrice associée à des fragilités ciblées en lecture/écriture, traitement des informations et outils scolaires.',
+    level:'Primaire',
+    impacts:{
+      impactMoteur:'Atteinte motrice légère à modérée avec lenteur gestuelle et fatigabilité lors des productions manuscrites.',
+      impactCognitif:'Troubles spécifiques des apprentissages avec difficultés en lecture, orthographe et automatisation.',
+      impactScolaire:'Les tâches écrites et la prise de notes sont coûteuses. Les outils compensatoires améliorent nettement l’accès aux apprentissages.',
+      impactRelationnel:'Relations sociales globalement adaptées ; possible baisse de confiance face aux tâches scolaires difficiles.'
+    },
+    weakDomains:['D2','D3','D4','D8'], strongDomains:['D5','D6','D9'], helpBias:'medium'
+  },
+  {
+    id:'moteur-executif',
+    title:'Atteinte motrice + fonctions exécutives / attention',
+    desc:'Base motrice avec difficultés supplémentaires de planification, initiation, attention et gestion du matériel.',
+    level:'Secondaire',
+    impacts:{
+      impactMoteur:'Atteinte motrice légère à modérée avec fatigabilité variable et lenteur dans certaines manipulations.',
+      impactCognitif:'Difficultés exécutives marquées : initiation, planification, maintien attentionnel et gestion des distracteurs.',
+      impactScolaire:'Organisation du travail fragile, nombreuses relances nécessaires et risque de décrochage sur les tâches longues.',
+      impactRelationnel:'Relations sociales adaptées mais impulsivité et frustration possibles lors des situations exigeantes.'
+    },
+    weakDomains:['D2','D3','D5','D7','D8'], strongDomains:['D6','D9'], helpBias:'mediumHigh'
+  },
+  {
+    id:'compensation-importante',
+    title:'Bonnes performances sous compensation importante',
+    desc:'Scores souvent satisfaisants grâce aux adaptations, au matériel et/ou à l’aide humaine.',
+    level:'Secondaire',
+    impacts:{
+      impactMoteur:'Atteinte motrice importante compensée par un environnement adapté, des aides techniques et une aide humaine régulière.',
+      impactCognitif:'Compétences cognitives et scolaires globalement préservées.',
+      impactScolaire:'Performances satisfaisantes lorsque les compensations prévues sont disponibles. Forte différence entre performance observée et autonomie sans soutien.',
+      impactRelationnel:'Participation sociale satisfaisante avec soutien adapté pour les déplacements et certaines activités.'
+    },
+    weakDomains:['D1','D8'], strongDomains:['D3','D4','D5','D6','D7','D9'], helpBias:'compensated'
+  }
+];
 
-  var demoHelp = {
-    d1_7:'Aide humaine ponctuelle', d1_8:'Aide humaine ponctuelle',
-    d2_2:'Aide humaine constante', d2_4:'Matériel seul', d2_6:'Aide humaine constante',
-    d3_1:'Aide humaine constante', d3_3:'Aide humaine constante', d3_8:'Matériel seul',
-    d4_4:'Matériel seul', d4_9:'Remédiation spécifique',
-    d5_6:'Aide humaine ponctuelle',
-    d6_4:'Aide humaine ponctuelle', d6_6:'Aide humaine ponctuelle',
-    d7_1:'Aide humaine ponctuelle', d7_2:'Aide humaine ponctuelle',
-    d8_2:'Aide humaine constante', d8_4:'Aide humaine ponctuelle',
-    d10_2:'Matériel seul', d10_3:'Matériel seul'
-  };
-
-  var demoComments = {
-    d1_7: 'Dispense de certains exercices physiques intenses. Participe aux échauffements.',
-    d1_8: 'Nécessite du temps de repos entre les bâtiments. Classe proche de l’entrée.',
-    d2_2: 'Cartable souvent désordonné malgré les rappels. Fiches code couleur partiellement efficaces.',
-    d2_4: 'Utilise un stylo ergonomique et un PC portable pour les cours théoriques.',
-    d2_6: 'Timer visuel mis en place. Encore difficile sans rappel de l’adulte.',
-    d3_1: 'Peut maintenir l’attention environ 15 min en continu. Pause active toutes les 20 min.',
-    d3_3: 'Répond impulsivement. Stratégie de la main levée partiellement intégrée.',
-    d4_4: 'Production écrite limitée en longueur. Dictée vocale utilisée pour les rédactions.',
-    d6_4: 'Réagit fort aux moqueries. Suivi CPMS en cours pour la gestion des conflits.',
-    d7_2: 'Anxiété notable avant les évaluations. Respiration guidée avec l’éducateur.',
-    d8_2: 'Forte fatigue cognitive en fin de journée. Adaptation du planning préconisée.',
-  };
-
-  state.responses = {};
-  Object.keys(demoScores).forEach(function(id) {
-    state.responses[id] = { score: demoScores[id] };
-    if (demoHelp[id]) state.responses[id].help = demoHelp[id];
-    if (demoComments[id]) state.responses[id].comment = demoComments[id];
-  });
-
-  setState({ step: 'results' });
-  window.scrollTo(0, 0);
+function demoScoreFor(domainId, itemIndex, profile) {
+  var weak = profile.weakDomains.indexOf(domainId) >= 0;
+  var strong = profile.strongDomains.indexOf(domainId) >= 0;
+  var seqWeak = [1,2,2,1,2,2,3,1,2];
+  var seqNeutral = [3,3,2,3,3,4,3,2,3];
+  var seqStrong = [4,3,4,3,4,3,4,4,3];
+  var seq = weak ? seqWeak : (strong ? seqStrong : seqNeutral);
+  return seq[itemIndex % seq.length];
 }
 
-// ─── MAIN RENDER ──────────────────────────────────────────────────────────────
+function demoHelpFor(score, profile, domainId, itemIndex) {
+  if (profile.helpBias === 'low') {
+    return score <= 2 ? (itemIndex%2===0?'Matériel seul':'Aide humaine ponctuelle') : 'Sans aide';
+  }
+  if (profile.helpBias === 'medium') {
+    if (score <= 1) return 'Aide humaine ponctuelle';
+    if (score === 2) return itemIndex%2===0?'Matériel seul':'Aide humaine ponctuelle';
+    return itemIndex%3===0?'Matériel seul':'Sans aide';
+  }
+  if (profile.helpBias === 'mediumHigh') {
+    if (score <= 1) return itemIndex%2===0?'Aide humaine constante':'Aide humaine ponctuelle';
+    if (score === 2) return 'Aide humaine ponctuelle';
+    return itemIndex%3===0?'Remédiation spécifique':'Sans aide';
+  }
+  if (profile.helpBias === 'high') {
+    if (domainId==='D1'||domainId==='D2'||domainId==='D8'||domainId==='D10') {
+      return score<=2 ? (itemIndex%2===0?'Aide humaine constante':'Aide humaine ponctuelle') : 'Aide humaine ponctuelle';
+    }
+    return score<=2?'Aide humaine ponctuelle':'Sans aide';
+  }
+  if (profile.helpBias === 'compensated') {
+    if (domainId==='D1'||domainId==='D2'||domainId==='D8'||domainId==='D10') {
+      return itemIndex%3===0?'Aide humaine constante':(itemIndex%2===0?'Aide humaine ponctuelle':'Matériel seul');
+    }
+    return score>=3 ? (itemIndex%4===0?'Matériel seul':'Sans aide') : 'Aide humaine ponctuelle';
+  }
+  return 'Sans aide';
+}
+
+function demoContext(domainId, itemIndex) {
+  var map = {
+    D1:['Déplacement','Classe','Activité physique'],
+    D2:['Classe','Transition','Classe'],
+    D3:['Classe','Évaluation','Classe'],
+    D4:['Classe','Évaluation','Classe'],
+    D5:['Classe','Travail de groupe','Classe'],
+    D6:['Récréation','Temps informel','Travail de groupe'],
+    D7:['Évaluation','Classe','Temps informel'],
+    D8:['Déplacement','Classe','Fin de journée'],
+    D9:['Réunion','Classe','École'],
+    D10:['Classe','Évaluation','Classe']
+  };
+  var arr=map[domainId]||['Classe'];
+  return arr[itemIndex%arr.length];
+}
+
+function demoComment(score, help) {
+  if (score >= 4) return 'Compétence bien installée dans les situations observées.';
+  if (score === 3 && help === 'Sans aide') return 'Fonctionnement satisfaisant et relativement stable dans le contexte observé.';
+  if (score === 3 && help !== 'Sans aide') return 'Performance satisfaisante lorsque les aides ou compensations prévues sont disponibles.';
+  if (score === 2) return 'Difficulté modérée observée ; la tâche reste réalisable avec adaptation, guidage ou temps supplémentaire.';
+  if (score === 1) return 'Difficulté importante ayant un impact fonctionnel régulier dans le quotidien scolaire.';
+  return '';
+}
+
+function applyDemoProfile(profile) {
+  state.info = {
+    code:'DEMO-'+profile.id.toUpperCase(),
+    profile:'Éducateur',
+    level:profile.level,
+    observationDate:todayLocalDate(),
+    impactMoteur:profile.impacts.impactMoteur,
+    impactCognitif:profile.impacts.impactCognitif,
+    impactScolaire:profile.impacts.impactScolaire,
+    impactRelationnel:profile.impacts.impactRelationnel
+  };
+  state.responses = {};
+  var priorityCount = 0;
+
+  DOMAINS.forEach(function(domain){
+    domain.items.forEach(function(item, ii){
+      var res = {};
+
+      if ((profile.id==='moteur-leger' && domain.id==='D10' && ii===4) ||
+          (profile.id==='moteur-dys' && domain.id==='D1' && ii===3)) {
+        res.notApplicable = true;
+        state.responses[item.id] = res;
+        return;
+      }
+
+      if ((profile.id==='moteur-modere-fatigue' && domain.id==='D6' && ii===5) ||
+          (profile.id==='moteur-executif' && domain.id==='D7' && ii===5)) {
+        res.score = 0;
+        state.responses[item.id] = res;
+        return;
+      }
+
+      var score = demoScoreFor(domain.id, ii, profile);
+      res.score = score;
+      res.help = demoHelpFor(score, profile, domain.id, ii);
+
+      if (score <= 2 || (profile.id==='compensation-importante' && res.help!=='Sans aide')) {
+        res.comment = demoComment(score,res.help);
+        res.context = demoContext(domain.id,ii);
+      }
+
+      if (priorityCount < 5 && (score===1 || (score===2 && profile.weakDomains.indexOf(domain.id)>=0))) {
+        res.priority = true;
+        priorityCount++;
+      }
+
+      state.responses[item.id] = res;
+    });
+  });
+
+  state.currentDraftId = makeDraftId();
+  state.domainIdx = 0;
+  state.aiSynthesis = '';
+  state.aiGoals = '';
+  state.errorMsg = '';
+  state.saveError = '';
+  setState({step:'results'});
+  window.scrollTo(0,0);
+}
+
+function showDemoProfilePicker() {
+  var overlay = h('div',{className:'modal-overlay no-print'});
+  var modal = h('div',{style:{background:'#fff',borderRadius:'1rem',padding:'1.5rem',maxWidth:'52rem',width:'95%',maxHeight:'85vh',overflowY:'auto',boxShadow:'0 25px 50px -12px rgba(0,0,0,0.3)'}});
+
+  var head=h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'start',gap:'1rem',marginBottom:'1rem'}});
+  var htxt=h('div');
+  htxt.appendChild(h('h3',{style:{fontSize:'1.25rem',fontWeight:'900',color:'#0f172a'}},"Choisir un profil de démonstration"));
+  htxt.appendChild(h('p',{style:{fontSize:'0.8rem',color:'#64748b',marginTop:'0.25rem'}},"Profils fictifs à visée de test et de démonstration. Aucun ne correspond à un jeune réel."));
+  head.appendChild(htxt);
+  head.appendChild(hBtn("Fermer","btn-ghost",function(){ overlay.remove(); }));
+  modal.appendChild(head);
+
+  var grid=h('div',{style:{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(250px,1fr))',gap:'0.9rem'}});
+  DEMO_PROFILES.forEach(function(p){
+    var card=h('button',{type:'button',style:{textAlign:'left',padding:'1rem',border:'1px solid #e2e8f0',borderRadius:'0.8rem',background:'#fff',cursor:'pointer',fontFamily:'inherit',transition:'all .15s'}});
+    card.onmouseenter=function(){card.style.borderColor='#93c5fd';card.style.background='#eff6ff';};
+    card.onmouseleave=function(){card.style.borderColor='#e2e8f0';card.style.background='#fff';};
+    card.onclick=function(){overlay.remove();applyDemoProfile(p);};
+    card.appendChild(h('div',{style:{fontWeight:'800',fontSize:'0.9rem',color:'#1e293b',marginBottom:'0.35rem'}},p.title));
+    card.appendChild(h('div',{style:{fontSize:'0.74rem',lineHeight:'1.5',color:'#64748b'}},p.desc));
+    grid.appendChild(card);
+  });
+
+  modal.appendChild(grid);
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+}
+
+function loadDemoData() {
+  showDemoProfilePicker();
+}
+
 function render() {
   // Save focus state before rebuilding DOM
   var activeId = document.activeElement ? document.activeElement.id : null;
