@@ -466,7 +466,7 @@ var LEVELS    = ["Maternel","Primaire","Secondaire"];
 var state = {
   step: 'welcome',
   apiKey: '',
-  info: { code:'', profile:'', level:'', observationDate:'', impactMoteur:'', impactCognitif:'', impactScolaire:'', impactRelationnel:'' },
+  info: { code:'', professionalName:'', profile:'', level:'', observationDate:'', impactMoteur:'', impactCognitif:'', impactScolaire:'', impactRelationnel:'' },
   responses: {},
   domainIdx: 0,
   aiSynthesis: '',
@@ -500,7 +500,7 @@ function dateFromISO(iso) {
 }
 
 function emptyInfo() {
-  return { code:'', profile:'', level:'', observationDate:todayLocalDate(), impactMoteur:'', impactCognitif:'', impactScolaire:'', impactRelationnel:'' };
+  return { code:'', professionalName:'', profile:'', level:'', observationDate:todayLocalDate(), impactMoteur:'', impactCognitif:'', impactScolaire:'', impactRelationnel:'' };
 }
 
 function normalizeInfo(info, fallbackTimestamp) {
@@ -758,7 +758,7 @@ function callGemini(prompt, sysInstruction, onSuccess, onError) {
 function buildProjectPayload() {
   return {
     type:'sais-observation',
-    version:2.48,
+    version:2.413,
     info:state.info,
     responses:state.responses,
     aiSynthesis:state.aiSynthesis,
@@ -992,6 +992,7 @@ function renderWelcome(root) {
       var left = h('div',{style:{flex:'1',minWidth:'220px'}});
       var label = (draft.info && draft.info.code ? draft.info.code : 'Dossier sans identifiant');
       var meta = [];
+      if (draft.info && draft.info.professionalName) meta.push(draft.info.professionalName);
       if (draft.info && draft.info.profile) meta.push(draft.info.profile);
       if (draft.info && draft.info.level) meta.push(draft.info.level);
       left.appendChild(h('div',{style:{fontWeight:'800',color:'#1e293b'}},label));
@@ -1087,6 +1088,13 @@ function renderInfo(root) {
     codeWrap.appendChild(codeHint);
     row1.appendChild(codeWrap);
 
+    var nameWrap = h('div');
+    nameWrap.appendChild(h('label', { htmlFor:'inf-professional-name', className:'label text-slate-500' }, "Nom du professionnel (facultatif)"));
+    var nameInput = h('input', { type:'text', id:'inf-professional-name', placeholder:"Nom du professionnel", value:state.info.professionalName||'', onInput:function(e){ state.info.professionalName=e.target.value; } });
+    nameWrap.appendChild(nameInput);
+    nameWrap.appendChild(h('p',{style:{fontSize:'0.7rem',color:'#64748b',marginTop:'0.35rem',lineHeight:'1.5'}},"Traçabilité interne uniquement — jamais inclus dans les prompts IA."));
+    row1.appendChild(nameWrap);
+
     var profWrap = h('div');
     profWrap.appendChild(h('label', { htmlFor:'inf-profile', className:'label text-slate-500' }, "Profil intervenant"));
     var profSel = h('select', { id:'inf-profile', onChange:function(e){ state.info.profile=e.target.value; render(); } });
@@ -1102,13 +1110,6 @@ function renderInfo(root) {
     LEVELS.forEach(function(l){ var o=h('option',{value:l},l); if(state.info.level===l) o.selected=true; levSel.appendChild(o); });
     levWrap.appendChild(levSel);
     row1.appendChild(levWrap);
-
-    var dateWrap = h('div');
-    dateWrap.appendChild(h('label', { htmlFor:'inf-date', className:'label text-slate-500' }, "Date de l'observation"));
-    var dateInput = h('input', { type:'date', id:'inf-date', value:state.info.observationDate || todayLocalDate(), onChange:function(e){ state.info.observationDate=e.target.value; saveCurrentDraft(); } });
-    dateWrap.appendChild(dateInput);
-    dateWrap.appendChild(h('p',{style:{fontSize:'0.68rem',color:'#64748b',marginTop:'0.35rem',lineHeight:'1.4'}},"Utilisée pour le suivi longitudinal du dossier."));
-    row1.appendChild(dateWrap);
     body.appendChild(row1);
 
     // Separator
@@ -1832,6 +1833,7 @@ function demoComment(score, help) {
 function applyDemoProfile(profile) {
   state.info = {
     code:'DEMO-'+profile.id.toUpperCase(),
+    professionalName:'',
     profile:'Éducateur',
     level:profile.level,
     observationDate:todayLocalDate(),
