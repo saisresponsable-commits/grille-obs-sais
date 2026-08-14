@@ -509,8 +509,14 @@ function emptyInfo() {
 }
 
 function normalizeInfo(info, fallbackTimestamp) {
-  var out = Object.assign(emptyInfo(), info || {});
-  if (!out.observationDate) out.observationDate = dateFromISO(fallbackTimestamp) || todayLocalDate();
+  var source = info || {};
+  var out = Object.assign(emptyInfo(), source);
+  // Pour les anciens JSON sans observationDate, utiliser d'abord la date historique
+  // disponible dans timestamp / exportedAt / fallbackTimestamp, et seulement
+  // la date du jour en dernier recours.
+  if (!source.observationDate) {
+    out.observationDate = dateFromISO(fallbackTimestamp) || todayLocalDate();
+  }
   return out;
 }
 
@@ -763,7 +769,7 @@ function callGemini(prompt, sysInstruction, onSuccess, onError) {
 function buildProjectPayload() {
   return {
     type:'sais-observation',
-    version:2.413,
+    version:2.415,
     info:state.info,
     responses:state.responses,
     aiSynthesis:state.aiSynthesis,
