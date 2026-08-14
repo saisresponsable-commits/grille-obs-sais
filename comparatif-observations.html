@@ -478,6 +478,9 @@ function renderModeSwitch(root) {
   var b2=document.createElement('button');b2.className='btn '+(analysisMode==='longitudinal'?'btn-primary':'btn-ghost');b2.textContent='📈 Évolution temporelle';b2.onclick=function(){analysisMode='longitudinal';render();};bar.appendChild(b2);
   root.appendChild(bar);
 }
+var HELP_INTENSITY_WEIGHTS_CMP={"Matériel seul":20,"Remédiation spécifique":40,"Aide humaine ponctuelle":60,"Aide humaine constante":100};
+function calcHelpProfileObs(o){if(o.helpProfile&&o.helpProfile.global)return o.helpProfile.global;var evaluable=0,needsHelp=0,vals=[];DOMAINS.forEach(function(d){d.items.forEach(function(id){var r=o.responses&&o.responses[id];if(!r||r.notApplicable||!(r.score>=1&&r.score<=4))return;evaluable++;if(r.help&&r.help!=='Sans aide'&&HELP_INTENSITY_WEIGHTS_CMP[r.help]!==undefined){needsHelp++;vals.push(HELP_INTENSITY_WEIGHTS_CMP[r.help]);}});});return{evaluable:evaluable,needsHelp:needsHelp,frequency:evaluable?Math.round(needsHelp/evaluable*100):null,intensity:vals.length?Math.round(vals.reduce(function(a,b){return a+b;},0)/vals.length):null};}
+
 function renderLongitudinal(root) {
   var ordered=orderedLongitudinal(); if(ordered.length<2)return;
   var title=document.createElement('p');title.className='section-title';title.textContent='Évolution longitudinale du dossier '+ordered[0].code;root.appendChild(title);
@@ -486,15 +489,8 @@ function renderLongitudinal(root) {
   var improving=0, declining=0, stable=0;
   DOMAINS.forEach(function(d){var a=calcDomainScore(first.responses,d.items),b=calcDomainScore(last.responses,d.items);if(a===null||b===null)return;var delta=b-a;if(delta>=10)improving++;else if(delta<=-10)declining++;else stable++;});
   [['Mesures',ordered.length],['Domaines en progrès',improving],['Stables (±9 pts)',stable],['En recul',declining]].forEach(function(x){var box=document.createElement('div');box.className='stat-box';box.innerHTML='<div class="stat-val">'+x[1]+'</div><div class="stat-lbl">'+x[0]+'</div>';stats.appendChild(box);});root.appendChild(stats);
-  var depSeries=ordered.filter(function(o){return o.helpDependency&&o.helpDependency.global!==null&&o.helpDependency.global!==undefined;});
-  if(depSeries.length>=2){
-    var dc=document.createElement('div');dc.className='card';dc.style.marginBottom='1.5rem';
-    dc.innerHTML='<div class="card-header">🧩 Évolution de la dépendance aux aides</div>';
-    var db=document.createElement('div');db.className='card-body';
-    var firstDep=depSeries[0].helpDependency.global,lastDep=depSeries[depSeries.length-1].helpDependency.global,deltaDep=lastDep-firstDep;
-    db.innerHTML='<div style="font-size:.9rem"><strong>'+firstDep+'/100</strong> → <strong>'+lastDep+'/100</strong> <span style="margin-left:.5rem;font-weight:700">'+(deltaDep>0?'+':'')+deltaDep+' pts</span></div><p style="font-size:.72rem;color:var(--muted);margin-top:.5rem">Une hausse signifie davantage de soutien/compensation requis. Indicateur interne descriptif, non validé cliniquement.</p>';
-    dc.appendChild(db);root.appendChild(dc);
-  }
+  var helpSeries=ordered.map(function(o){return {profile:calcHelpProfileObs(o)};}).filter(function(x){return x.profile.evaluable>0;});
+  if(helpSeries.length>=2){var hc=document.createElement('div');hc.className='card';hc.style.marginBottom='1.5rem';hc.innerHTML='<div class="card-header">🧩 Évolution du profil de besoin d’aide</div>';var hb=document.createElement('div');hb.className='card-body';var hf=helpSeries[0].profile,hl=helpSeries[helpSeries.length-1].profile;hb.innerHTML='<div style="font-size:.85rem"><strong>Fréquence :</strong> '+hf.needsHelp+'/'+hf.evaluable+' ('+hf.frequency+'%) → '+hl.needsHelp+'/'+hl.evaluable+' ('+hl.frequency+'%)</div><div style="font-size:.85rem;margin-top:.4rem"><strong>Intensité lorsque l’aide est nécessaire :</strong> '+(hf.intensity===null?'NR':hf.intensity+'/100')+' → '+(hl.intensity===null?'NR':hl.intensity+'/100')+'</div><p style="font-size:.72rem;color:var(--muted);margin-top:.5rem">Fréquence et intensité sont interprétées séparément.</p>';hc.appendChild(hb);root.appendChild(hc);}
   var card=document.createElement('div');card.className='card';card.style.marginBottom='1.5rem';card.innerHTML='<div class="card-header">📈 Trajectoire par domaine</div><div class="card-body"><div style="height:420px"><canvas id="longitudinal-canvas"></canvas></div></div>';root.appendChild(card);
   setTimeout(function(){
     var el=document.getElementById('longitudinal-canvas');
