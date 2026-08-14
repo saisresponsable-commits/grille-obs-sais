@@ -626,54 +626,18 @@ function formatDraftDate(iso) {
   }
 }
 
-// ─── INDICE DESCRIPTIF DE DÉPENDANCE AUX AIDES ───────────────────────────────
-// Indicateur interne non validé cliniquement. Plus le score est élevé,
-// plus la réalisation des activités observées dépend d'un soutien/compensation.
-var HELP_DEPENDENCY_WEIGHTS = {
-  "Sans aide": 0,
-  "Matériel seul": 20,
-  "Remédiation spécifique": 40,
-  "Aide humaine ponctuelle": 60,
-  "Aide humaine constante": 100
-};
-
-function dependencyLabel(score) {
-  if (score === null) return 'NR';
-  if (score < 20) return 'Faible';
-  if (score < 40) return 'Légère';
-  if (score < 60) return 'Modérée';
-  if (score < 80) return 'Élevée';
-  return 'Très élevée';
+// ─── PROFIL DE BESOIN D'AIDE ─────────────────────────────────────────────────
+var HELP_INTENSITY_WEIGHTS={"Matériel seul":20,"Remédiation spécifique":40,"Aide humaine ponctuelle":60,"Aide humaine constante":100};
+function helpIntensityLabel(score){if(score===null)return'NR';if(score<30)return'Faible';if(score<50)return'Modérée';if(score<80)return'Importante';return'Très importante';}
+function calcHelpProfileForItems(items){
+  var evaluable=0,needsHelp=0,vals=[],types={};HELP_LEVELS.forEach(function(x){types[x]=0;});
+  items.forEach(function(item){var r=state.responses[item.id];if(!r||r.notApplicable||!(r.score>=1&&r.score<=4))return;evaluable++;
+    if(r.help&&types[r.help]!==undefined)types[r.help]++;
+    if(r.help&&r.help!=='Sans aide'&&HELP_INTENSITY_WEIGHTS[r.help]!==undefined){needsHelp++;vals.push(HELP_INTENSITY_WEIGHTS[r.help]);}});
+  return {evaluable:evaluable,needsHelp:needsHelp,frequency:evaluable?Math.round(needsHelp/evaluable*100):null,intensity:vals.length?Math.round(vals.reduce(function(a,b){return a+b;},0)/vals.length):null,types:types};
 }
-
-function calcHelpDependencyForItems(items) {
-  var vals = [];
-  items.forEach(function(item){
-    var r = state.responses[item.id];
-    if (!r || r.notApplicable || !(r.score >= 1 && r.score <= 4) || !r.help) return;
-    if (HELP_DEPENDENCY_WEIGHTS[r.help] !== undefined) vals.push(HELP_DEPENDENCY_WEIGHTS[r.help]);
-  });
-  if (!vals.length) return { score:null, count:0 };
-  return { score:Math.round(vals.reduce(function(a,b){return a+b;},0)/vals.length), count:vals.length };
-}
-
-function getHelpDependencyStats() {
-  var domainStats = DOMAINS.map(function(d){
-    var x = calcHelpDependencyForItems(d.items);
-    return { id:d.id, title:d.title, score:x.score, count:x.count };
-  });
-  var all = [];
-  DOMAINS.forEach(function(d){ d.items.forEach(function(item){
-    var r=state.responses[item.id];
-    if (!r || r.notApplicable || !(r.score >= 1 && r.score <= 4) || !r.help) return;
-    if (HELP_DEPENDENCY_WEIGHTS[r.help] !== undefined) all.push(HELP_DEPENDENCY_WEIGHTS[r.help]);
-  });});
-  return {
-    global: all.length ? Math.round(all.reduce(function(a,b){return a+b;},0)/all.length) : null,
-    count: all.length,
-    domains: domainStats
-  };
-}
+function getHelpProfileStats(){var domains=DOMAINS.map(function(d){var x=calcHelpProfileForItems(d.items);return Object.assign({id:d.id,title:d.title},x);});var all=[];DOMAINS.forEach(function(d){all=all.concat(d.items);});return {global:calcHelpProfileForItems(all),domains:domains};}
+function getHelpDependencyStats(){return getHelpProfileStats();}
 
 function setState(patch) {
   Object.assign(state, patch);
@@ -794,7 +758,7 @@ function callGemini(prompt, sysInstruction, onSuccess, onError) {
 function buildProjectPayload() {
   return {
     type:'sais-observation',
-    version:2.41,
+    version:2.47,
     info:state.info,
     responses:state.responses,
     aiSynthesis:state.aiSynthesis,
@@ -802,7 +766,7 @@ function buildProjectPayload() {
     domainIdx:state.domainIdx,
     step:state.step,
     completion:getCompletionStats(),
-    helpDependency:getHelpDependencyStats(),
+    helpProfile:getHelpProfileStats(),
     observationDate:state.info.observationDate || null,
     timestamp:new Date().toISOString()
   };
@@ -1472,47 +1436,24 @@ render(); window.scrollTo(0,0);
     body.appendChild(chartWrap);
   }));
 
-  // Indice descriptif de dépendance aux aides
-  var dep = getHelpDependencyStats();
-  wrap.appendChild(hCard("Indice descriptif de dépendance aux aides","ShieldAlert","",function(body){
-    body.parentElement.style.borderColor='#c7d2fe';
-    var dGrid=h('div',{style:{display:'grid',gridTemplateColumns:'minmax(180px,0.8fr) minmax(0,2fr)',gap:'1.5rem',alignItems:'start'}});
-    var dMain=h('div',{style:{textAlign:'center',background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:'0.75rem',padding:'1.25rem'}});
-    dMain.appendChild(h('p',{className:'label text-slate-400',style:{marginBottom:'0.5rem'}},"Indice global"));
-    dMain.appendChild(h('p',{style:{fontSize:'3rem',fontWeight:'900',color:dep.global===null?'#64748b':dep.global>=60?'#dc2626':dep.global>=40?'#d97706':'#16a34a'}},dep.global===null?'NR':dep.global+'/100'));
-    dMain.appendChild(h('p',{style:{fontSize:'0.8rem',fontWeight:'800',color:'#475569'}},dependencyLabel(dep.global)));
-    dMain.appendChild(h('p',{style:{fontSize:'0.68rem',color:'#94a3b8',marginTop:'0.5rem'}},dep.count+' item'+(dep.count>1?'s':'')+' cotés avec niveau d’aide renseigné'));
-    dGrid.appendChild(dMain);
-    var dList=h('div');
-    dep.domains.forEach(function(d){
-      var row=h('div',{style:{display:'grid',gridTemplateColumns:'minmax(130px,1fr) 2fr 70px',gap:'0.7rem',alignItems:'center',marginBottom:'0.55rem'}});
-      row.appendChild(h('span',{style:{fontSize:'0.7rem',fontWeight:'700',color:'#475569'}},d.title));
-      var tr=h('div',{className:'progress-track',style:{height:'7px'}});
-      tr.appendChild(h('div',{className:'progress-fill',style:{height:'7px',width:(d.score===null?0:d.score)+'%',background:d.score===null?'#cbd5e1':d.score>=60?'#ef4444':d.score>=40?'#f59e0b':'#22c55e'}}));
-      row.appendChild(tr);
-      row.appendChild(h('span',{style:{fontSize:'0.68rem',fontWeight:'800',color:'#334155',textAlign:'right'}},d.score===null?'NR':d.score+'/100'));
-      dList.appendChild(row);
-    });
-    dGrid.appendChild(dList); body.appendChild(dGrid);
-    body.appendChild(h('p',{style:{fontSize:'0.68rem',color:'#64748b',marginTop:'1rem',lineHeight:'1.6',fontStyle:'italic'}},
-      "Indicateur interne descriptif, non validé cliniquement. Pondération : Sans aide 0 · Matériel seul 20 · Remédiation spécifique 40 · Aide humaine ponctuelle 60 · Aide humaine constante 100. Il complète le score fonctionnel sans le modifier."));
-  }));
-
-  // Clinical impacts
-  wrap.appendChild(hCard("Impacts Cliniques Multidimensionnels","Stethoscope","",function(body){
-    var g = h('div',{className:'grid-4'});
-    [
-      {key:'impactMoteur',label:"Plan Moteur"},
-      {key:'impactCognitif',label:"Plan Cognitif"},
-      {key:'impactScolaire',label:"Plan Scolaire"},
-      {key:'impactRelationnel',label:"Plan Relationnel"}
-    ].forEach(function(imp){
-      var box = h('div',{style:{background:'#f8fafc',padding:'1rem',borderRadius:'1rem',border:'1px solid #f1f5f9'}});
-      box.appendChild(h('h5',{className:'label text-amber-700',style:{marginBottom:'0.75rem',letterSpacing:'0.1em'}},imp.label));
-      box.appendChild(h('p',{style:{fontSize:'0.7rem',color:'#334155',lineHeight:'1.6',minHeight:'60px',whiteSpace:'pre-wrap',fontStyle:'italic'}},'"'+(state.info[imp.key]||'—')+'"'));
-      g.appendChild(box);
-    });
-    body.appendChild(g);
+  // Profil de besoin d'aide
+  var dep=getHelpProfileStats();
+  wrap.appendChild(hCard("Profil de besoin d’aide","ShieldAlert","",function(body){
+    body.parentElement.style.borderColor='#c7d2fe';var g=dep.global;
+    var summary=h('div',{style:{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))',gap:'1rem',marginBottom:'1.25rem'}});
+    var fbox=h('div',{style:{background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:'0.75rem',padding:'1rem',textAlign:'center'}});
+    fbox.appendChild(h('p',{className:'label text-slate-400'},"Fréquence du besoin d’aide"));
+    fbox.appendChild(h('p',{style:{fontSize:'2rem',fontWeight:'900',color:'#334155',margin:'0.35rem 0'}},g.evaluable?g.needsHelp+'/'+g.evaluable+' ('+g.frequency+'%)':'NR'));
+    fbox.appendChild(h('p',{style:{fontSize:'0.68rem',color:'#64748b'}},"Items avec aide / items effectivement évalués"));summary.appendChild(fbox);
+    var ibox=h('div',{style:{background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:'0.75rem',padding:'1rem',textAlign:'center'}});
+    ibox.appendChild(h('p',{className:'label text-slate-400'},"Intensité lorsque l’aide est nécessaire"));
+    ibox.appendChild(h('p',{style:{fontSize:'2rem',fontWeight:'900',color:'#334155',margin:'0.35rem 0'}},g.intensity===null?'NR':g.intensity+'/100'));
+    ibox.appendChild(h('p',{style:{fontSize:'0.68rem',color:'#64748b'}},g.intensity===null?"Aucune aide renseignée":helpIntensityLabel(g.intensity)));summary.appendChild(ibox);body.appendChild(summary);
+    dep.domains.forEach(function(d){var row=h('div',{style:{display:'grid',gridTemplateColumns:'minmax(150px,1.3fr) minmax(150px,1fr) minmax(150px,1fr)',gap:'0.8rem',padding:'0.65rem 0',borderBottom:'1px solid #f1f5f9'}});
+      row.appendChild(h('span',{style:{fontSize:'0.72rem',fontWeight:'800',color:'#475569'}},d.title));
+      row.appendChild(h('span',{style:{fontSize:'0.7rem'}},d.evaluable?d.needsHelp+'/'+d.evaluable+' items — '+d.frequency+'%':'NR'));
+      row.appendChild(h('span',{style:{fontSize:'0.7rem'}},d.intensity===null?'Intensité : NR':'Intensité : '+d.intensity+'/100'));body.appendChild(row);});
+    body.appendChild(h('p',{style:{fontSize:'0.65rem',color:'#94a3b8',marginTop:'0.9rem',fontStyle:'italic'}},"La fréquence indique la part des situations évaluées nécessitant une aide. L’intensité décrit le niveau moyen de cette aide lorsqu’elle est nécessaire. Les deux dimensions doivent être interprétées séparément."));
   }));
 
   // Detailed table
@@ -1606,8 +1547,8 @@ render(); window.scrollTo(0,0);
     ctx += 'PROFIL INTERVENANT : ' + (state.info.profile||'Non renseigné') + '\n';
     ctx += 'DATE DE L’OBSERVATION : ' + (state.info.observationDate||'Non renseignée') + '\n';
     ctx += 'COMPLÉTUDE : '+comp.completed+'/'+comp.total+' ('+comp.percent+'%) ; '+comp.nonObserved+' non observés ; '+comp.notApplicable+' non applicables ; '+comp.unanswered+' sans réponse.\n';
-    var depCtx=getHelpDependencyStats();
-    ctx += 'INDICE DESCRIPTIF DE DÉPENDANCE AUX AIDES : '+(depCtx.global===null?'NR':depCtx.global+'/100 ('+dependencyLabel(depCtx.global)+')')+'. Indicateur interne non validé cliniquement.\n\n';
+    var depCtx=getHelpProfileStats();
+    ctx += 'PROFIL DE BESOIN D’AIDE : fréquence '+(depCtx.global.evaluable?(depCtx.global.needsHelp+'/'+depCtx.global.evaluable+' items ('+depCtx.global.frequency+'%)'):'NR')+' ; intensité moyenne lorsque l’aide est nécessaire '+(depCtx.global.intensity===null?'NR':depCtx.global.intensity+'/100')+'. Interpréter séparément fréquence et intensité.\n\n';
     ctx += 'IMPACTS CLINIQUES :\n';
     ctx += '- Plan Moteur : ' + (state.info.impactMoteur||'Non renseigné') + '\n';
     ctx += '- Plan Cognitif/DYS : ' + (state.info.impactCognitif||'Non renseigné') + '\n';
